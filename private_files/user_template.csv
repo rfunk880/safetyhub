@@ -1,0 +1,2 @@
+FirstName,LastName,Email,Password,EmployeeID,Title,MobilePhone,AltPhone,EmergencyContactName,EmergencyContactPhone,Type,RoleID,TerminationDate
+John,Doe,john.doe@example.com,newpassword,JD123,Field Operator,555-123-4567,,Jane Doe,555-987-6543,Employee,5,
