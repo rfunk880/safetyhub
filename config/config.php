@@ -1,5 +1,7 @@
 <?php
-// config.php
+// config/config.php
+// Main SafetyHub configuration file
+// Now automatically includes navigation for all pages
 
 // Include the Composer autoloader
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -56,7 +58,6 @@ function sendSetupEmail($recipient_email, $token) {
         $mail->SMTPAuth   = true;
         $mail->Username   = 'safetyhub@swfic.net';
         $mail->Password   = 'sgeBEcJUY!9x';
-        // --- FINAL FIX: Use the string 'ssl' instead of a constant ---
         $mail->SMTPSecure = 'ssl';
         $mail->Port       = 465;
 
@@ -137,42 +138,16 @@ function deleteProfilePicture($profilePictureFilename) {
     // Build full path to the file in uploads/profile_pictures/
     $full_path = __DIR__ . '/../uploads/profile_pictures/' . $profilePictureFilename;
     
-    // Delete file if it exists
     if (file_exists($full_path)) {
         return unlink($full_path);
     }
     
-    return true; // File doesn't exist
+    return true; // File doesn't exist, consider it "deleted"
 }
 
 /**
- * Cleanup profile pictures for deleted users
- * @param mysqli $conn Database connection
- * @param array $userIds Array of user IDs being deleted
- */
-function cleanupUserProfilePictures($conn, $userIds) {
-    if (empty($userIds)) {
-        return;
-    }
-    
-    $placeholders = implode(',', array_fill(0, count($userIds), '?'));
-    $types = str_repeat('i', count($userIds));
-    
-    $stmt = $conn->prepare("SELECT profilePicture FROM users WHERE id IN ($placeholders) AND profilePicture IS NOT NULL");
-    $stmt->bind_param($types, ...$userIds);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    while ($row = $result->fetch_assoc()) {
-        deleteProfilePicture($row['profilePicture']);
-    }
-    
-    $stmt->close();
-}
-
-/**
- * Get the full path to a profile picture for serving
- * @param string $filename The profile picture filename
+ * Get profile picture path helper function
+ * @param string $filename Profile picture filename
  * @return string|null Full path if file exists, null otherwise
  */
 function getProfilePicturePath($filename) {
@@ -180,9 +155,13 @@ function getProfilePicturePath($filename) {
         return null;
     }
     
-    // Updated path to uploads/profile_pictures/
-    $full_path = __DIR__ . '/../uploads/profile_pictures/' . basename($filename);
-    
+    $full_path = __DIR__ . '/../uploads/profile_pictures/' . $filename;
     return file_exists($full_path) ? $full_path : null;
 }
-?>
+
+// --- AUTOMATIC NAVIGATION LOADING ---
+// Load navigation for all web pages (not CLI scripts or API endpoints)
+if (isset($_SERVER['HTTP_HOST']) && !defined('SKIP_NAVIGATION')) {
+    // Include navigation after database and session are ready
+    require_once __DIR__ . '/../includes/navigation.php';
+}

@@ -70,44 +70,8 @@ $can_see_user_management = true; // All admin roles can see user management
 <body class="bg-gray-50">
     <div class="flex h-screen">
         <!-- Sidebar -->
-        <aside id="sidebar" class="sidebar absolute md:relative bg-gray-800 text-white w-64 h-full flex-shrink-0 z-20">
-            <!-- Logo -->
-            <div class="p-4 flex items-center border-b border-gray-700">
-                <img src="https://swfunk.com/wp-content/uploads/2020/04/Goal-Zero-1.png" alt="Logo" class="h-10 w-auto mr-3">
-                <h1 class="text-xl font-bold">Safety Hub</h1>
-            </div>
-
-            <!-- Navigation -->
-            <nav class="p-4">
-                <a href="users.php" class="flex items-center py-3 px-3 rounded-lg bg-gray-700 text-white transition-colors">
-                    <i data-lucide="users" class="w-5 h-5 mr-3"></i>
-                    User Management
-                </a>
-            </nav>
-
-            <!-- User Info -->
-            <div class="absolute bottom-0 w-full border-t border-gray-700">
-                <a href="profile.php" class="flex items-center p-4 hover:bg-gray-700 transition-colors group">
-                    <?php if (!empty($loggedInUserProfilePicture) && getProfilePicturePath($loggedInUserProfilePicture)): ?>
-                        <img src="serve_image.php?file=<?php echo urlencode($loggedInUserProfilePicture); ?>" 
-                             alt="Profile" 
-                             class="w-10 h-12 rounded object-cover mr-3 border border-gray-500 group-hover:border-blue-400">
-                    <?php else: ?>
-                        <div class="w-10 h-12 rounded bg-gray-600 flex items-center justify-center mr-3 border border-gray-500 group-hover:border-blue-400">
-                            <i data-lucide="user" class="w-6 h-6 text-gray-400"></i>
-                        </div>
-                    <?php endif; ?>
-                    <div class="min-w-0">
-                        <p class="font-medium truncate group-hover:text-blue-300"><?php echo htmlspecialchars($loggedInUser['firstName'] . ' ' . $loggedInUser['lastName']); ?></p>
-                        <p class="text-sm text-gray-400 truncate"><?php echo htmlspecialchars($loggedInUserRoleName); ?></p>
-                    </div>
-                </a>
-                <a href="logout.php" class="flex items-center py-3 px-4 text-gray-400 hover:bg-red-600 hover:text-white transition-colors">
-                    <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
-                    Logout
-                </a>
-            </div>
-        </aside>
+<!-- NEW - Just this one line -->
+<?php renderNavigation(); ?>
 
         <!-- Main Content -->
         <main class="flex-1 flex flex-col overflow-hidden">

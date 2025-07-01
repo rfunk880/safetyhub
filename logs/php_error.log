@@ -1,0 +1,95 @@
+[30-Jun-2025 22:45:47 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => d.chen@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 0
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[30-Jun-2025 22:52:55 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => d.chen@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 0
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[30-Jun-2025 22:53:02 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => d.chen@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 0
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[30-Jun-2025 22:53:12 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => d.chen@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 0
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[01-Jul-2025 00:44:37 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => d.chen@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 0
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+

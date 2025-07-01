@@ -200,26 +200,8 @@ $loggedInUserRoleName = getRoleName($_SESSION['user_role_id'], $roles);
 <body class="bg-gray-100">
     <div id="app" class="flex h-screen">
         <!-- Sidebar -->
-        <aside id="sidebar" class="sidebar absolute md:relative bg-gray-800 text-white w-64 h-full flex-shrink-0 z-20">
-             <div class="p-4 flex items-center">
-                <img src="https://swfunk.com/wp-content/uploads/2020/04/Goal-Zero-1.png" alt="Logo" class="h-10 w-auto mr-3">
-                <h1 class="text-2xl font-bold text-white">Safety Hub</h1>
-            </div>
-            <nav class="mt-8">
-                <a href="users.php" class="flex items-center mt-4 py-2 px-6 bg-gray-700 text-gray-100"><i data-lucide="users" class="w-5 h-5"></i><span class="mx-3">User Management</span></a>
-                 <a href="#" class="flex items-center mt-4 py-2 px-6 text-gray-400 hover:bg-gray-700 hover:text-gray-100"><i data-lucide="book-marked" class="w-5 h-5"></i><span class="mx-3">LMS</span></a>
-                <a href="#" class="flex items-center mt-4 py-2 px-6 text-gray-400 hover:bg-gray-700 hover:text-gray-100"><i data-lucide="shield-check" class="w-5 h-5"></i><span class="mx-3">SMS</span></a>
-                <a href="#" class="flex items-center mt-4 py-2 px-6 text-gray-400 hover:bg-gray-700 hover:text-gray-100"><i data-lucide="layout-dashboard" class="w-5 h-5"></i><span class="mx-3">Dashboards</span></a>
-            </nav>
-            <div class="absolute bottom-0 w-full">
-                 <div class="p-4 border-t border-gray-700">
-                    <p class="text-sm font-medium">Logged in as:</p>
-                    <p class="text-lg font-semibold"><?php echo htmlspecialchars($_SESSION['user_first_name'] . ' ' . $_SESSION['user_last_name']); ?></p>
-                    <p class="text-sm text-gray-400"><?php echo htmlspecialchars($loggedInUserRoleName); ?></p>
-                 </div>
-                <a href="logout.php" class="flex items-center py-4 px-6 text-gray-400 hover:bg-gray-700 hover:text-gray-100"><i data-lucide="log-out" class="w-5 h-5"></i><span class="mx-3">Logout</span></a>
-            </div>
-        </aside>
+<!-- NEW - Just this one line -->
+<?php renderNavigation(); ?>
 
         <!-- Main Content -->
         <main class="flex-1 flex flex-col overflow-hidden">
