@@ -1,4 +1,43 @@
-[30-Jun-2025 22:45:47 UTC] Debug - First user data: Array
+[01-Jul-2025 17:57:40 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function incrementNotificationCount() in /home/customer/www/safetyhub.swfunk.com/src/communication.php:462
+Stack trace:
+#0 /home/customer/www/safetyhub.swfunk.com/public_html/communication/talk_details.php(64): sendReminderNotification('4', 'email', Object(mysqli))
+#1 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/src/communication.php on line 462
+[01-Jul-2025 17:57:46 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function incrementNotificationCount() in /home/customer/www/safetyhub.swfunk.com/src/communication.php:462
+Stack trace:
+#0 /home/customer/www/safetyhub.swfunk.com/public_html/communication/talk_details.php(64): sendReminderNotification('4', 'sms', Object(mysqli))
+#1 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/src/communication.php on line 462
+[01-Jul-2025 19:13:53 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APP_NAME" in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:102
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 102
+[01-Jul-2025 19:13:59 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APP_NAME" in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:102
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 102
+[01-Jul-2025 19:14:08 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APP_NAME" in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:102
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 102
+[01-Jul-2025 19:14:28 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APP_NAME" in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:102
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 102
+[01-Jul-2025 19:16:22 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APP_NAME" in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:102
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 102
+[01-Jul-2025 19:16:26 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APP_NAME" in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:102
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 102
+[01-Jul-2025 19:16:28 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APP_NAME" in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:102
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 102
+[01-Jul-2025 20:24:16 UTC] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in /home/customer/www/safetyhub.swfunk.com/public_html/communication/debug.php on line 24
+[01-Jul-2025 20:44:02 UTC] Debug - First user data: Array
 (
     [id] => 3
     [firstName] => David
@@ -17,7 +56,13 @@
     [roleName] => Manager
 )
 
-[30-Jun-2025 22:52:55 UTC] Debug - First user data: Array
+[01-Jul-2025 20:48:51 UTC] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in /home/customer/www/safetyhub.swfunk.com/public_html/communication/debug.php on line 15
+[01-Jul-2025 20:48:51 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.created_at' in 'field list' in /home/customer/www/safetyhub.swfunk.com/public_html/communication/debug.php:45
+Stack trace:
+#0 /home/customer/www/safetyhub.swfunk.com/public_html/communication/debug.php(45): mysqli->query('SELECT st.id, s...')
+#1 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/debug.php on line 45
+[01-Jul-2025 21:06:54 UTC] Debug - First user data: Array
 (
     [id] => 3
     [firstName] => David
@@ -36,45 +81,7 @@
     [roleName] => Manager
 )
 
-[30-Jun-2025 22:53:02 UTC] Debug - First user data: Array
-(
-    [id] => 3
-    [firstName] => David
-    [lastName] => Chen
-    [email] => d.chen@swfunk.com
-    [employeeId] => SWF003
-    [roleId] => 3
-    [title] => Safety Manager
-    [mobile_phone] => 0
-    [alt_phone] => 
-    [emergency_contact_name] => 
-    [emergency_contact_phone] => 
-    [type] => Employee
-    [terminationDate] => 
-    [profilePicture] => 
-    [roleName] => Manager
-)
-
-[30-Jun-2025 22:53:12 UTC] Debug - First user data: Array
-(
-    [id] => 3
-    [firstName] => David
-    [lastName] => Chen
-    [email] => d.chen@swfunk.com
-    [employeeId] => SWF003
-    [roleId] => 3
-    [title] => Safety Manager
-    [mobile_phone] => 0
-    [alt_phone] => 
-    [emergency_contact_name] => 
-    [emergency_contact_phone] => 
-    [type] => Employee
-    [terminationDate] => 
-    [profilePicture] => 
-    [roleName] => Manager
-)
-
-[01-Jul-2025 00:44:37 UTC] Debug - First user data: Array
+[01-Jul-2025 21:18:43 UTC] Debug - First user data: Array
 (
     [id] => 3
     [firstName] => David

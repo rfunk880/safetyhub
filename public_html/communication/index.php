@@ -238,7 +238,7 @@ $error = $_GET['error'] ?? '';
                                     <h4 class="font-medium text-gray-900"><?php echo htmlspecialchars($talk['title']); ?></h4>
                                     <p class="text-sm text-gray-600">
                                         <?php echo $talk['total_confirmed']; ?> of <?php echo $talk['total_distributed']; ?> confirmed
-                                        • Last sent <?php echo date('M j, Y', strtotime($talk['last_sent'])); ?>
+                                        • Last sent <?php echo $talk['last_sent'] ? date('M j, Y', strtotime($talk['last_sent'])) : 'Never'; ?>
                                     </p>
                                 </div>
                                 <a href="talk_details.php?id=<?php echo $talk['id']; ?>" class="text-blue-600 hover:text-blue-800 text-sm font-medium">

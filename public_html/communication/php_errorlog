@@ -1,0 +1,12 @@
+[01-Jul-2025 19:20:50 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/customer/www/safetyhub.swfunk.com/public_html/communication/../safetytalk_private/bootstrap.php' (include_path='.:/usr/local/php82/pear') in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:51
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 51
+[01-Jul-2025 19:20:53 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/customer/www/safetyhub.swfunk.com/public_html/communication/../safetytalk_private/bootstrap.php' (include_path='.:/usr/local/php82/pear') in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:51
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 51
+[01-Jul-2025 19:22:04 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/customer/www/safetyhub.swfunk.com/public_html/communication/../safetytalk_private/bootstrap.php' (include_path='.:/usr/local/php82/pear') in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:51
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 51

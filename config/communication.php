@@ -34,7 +34,7 @@ define('COMM_EMAIL_FROM_NAME', 'Safety Hub - Communications');
 
 // Communication SMS/Twilio settings
 define('COMM_TWILIO_ACCOUNT_SID', 'AC5a1bd30f59b6b3c8facb7583d885e56a');
-define('COMM_TWILIO_AUTH_TOKEN', '348c30ee560c83ffad91effa8d20d70c');
+define('COMM_TWILIO_AUTH_TOKEN', '4637b4a29c705e2784bc329edf95ebe9');
 define('COMM_TWILIO_PHONE_NUMBER', '+18047350956');
 define('COMM_TWILIO_MESSAGING_SERVICE_SID', 'MGe20e6e071e8b46e0b42e305e221378ec');
 
@@ -179,37 +179,62 @@ function sendSafetyTalkEmail($recipient_email, $recipient_name, $talk_title, $vi
 }
 
 /**
- * Send safety talk notification SMS using Twilio
+ * Send safety talk notification SMS using Twilio (cURL method)
  * Simple SMS function - complex SMS logic should go in /src/communication.php
  */
 function sendSafetyTalkSMS($recipient_phone, $recipient_name, $talk_title, $view_link) {
-    // Only load Twilio if we're actually sending SMS
-    require_once __DIR__ . '/../vendor/autoload.php';
-    
     try {
-        $twilio = new \Twilio\Rest\Client(COMM_TWILIO_ACCOUNT_SID, COMM_TWILIO_AUTH_TOKEN);
-        
         // Format phone number
         $formatted_phone = formatPhoneForSMS($recipient_phone);
         
-        // Create short message (SMS length limit)
-        $message = "Safety Communication: {$talk_title}. Please view and confirm: {$view_link}";
+        // Create a concise message that prioritizes the link
+        // Start with the shortest possible message that includes the link
+        $base_message = "Safety Talk: Please view and confirm: {$view_link}";
         
-        // Truncate if too long
-        if (strlen($message) > COMM_SMS_MAX_LENGTH) {
-            $message = "Safety Communication: {$talk_title}. Please check your email for details.";
+        // If that fits, try to add the title
+        if (strlen($base_message) <= COMM_SMS_MAX_LENGTH) {
+            $message_with_title = "Safety Talk '{$talk_title}': Please view and confirm: {$view_link}";
+            
+            if (strlen($message_with_title) <= COMM_SMS_MAX_LENGTH) {
+                $message = $message_with_title;
+            } else {
+                // Truncate title to fit
+                $available_chars = COMM_SMS_MAX_LENGTH - strlen("Safety Talk '': Please view and confirm: {$view_link}");
+                $truncated_title = substr($talk_title, 0, $available_chars - 3) . '...';
+                $message = "Safety Talk '{$truncated_title}': Please view and confirm: {$view_link}";
+            }
+        } else {
+            // If even the base message is too long, just use link with minimal text
+            $message = "Safety Talk: {$view_link}";
         }
         
-        $twilio->messages->create(
-            $formatted_phone,
-            [
-                'from' => COMM_TWILIO_PHONE_NUMBER,
-                'body' => $message,
-                'messagingServiceSid' => COMM_TWILIO_MESSAGING_SERVICE_SID
-            ]
-        );
+        // Use Twilio REST API directly with cURL (same method as safetytalk module)
+        $twilio_url = "https://api.twilio.com/2010-04-01/Accounts/" . COMM_TWILIO_ACCOUNT_SID . "/Messages.json";
         
-        return true;
+        $postData = http_build_query([
+            'To' => $formatted_phone,
+            'MessagingServiceSid' => COMM_TWILIO_MESSAGING_SERVICE_SID,
+            'ShortenUrls' => true,
+            'Body' => $message
+        ]);
+        
+        $ch = curl_init($twilio_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+        curl_setopt($ch, CURLOPT_USERPWD, COMM_TWILIO_ACCOUNT_SID . ':' . COMM_TWILIO_AUTH_TOKEN);
+        
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($http_code >= 200 && $http_code < 300) {
+            return true;
+        } else {
+            error_log("Safety Talk SMS Error - HTTP Code: {$http_code}, Response: {$response}");
+            return false;
+        }
+        
     } catch (Exception $e) {
         error_log("Safety Talk SMS Error: " . $e->getMessage());
         return false;

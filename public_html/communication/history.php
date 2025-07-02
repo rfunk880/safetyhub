@@ -182,72 +182,92 @@ $error = $_GET['error'] ?? '';
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    <?php foreach ($past_talks as $talk): ?>
-                                        <?php
-                                        $completion_percentage = $talk['total_distributed'] > 0 ? 
-                                            ($talk['total_confirmed'] / $talk['total_distributed']) * 100 : 0;
-                                        
-                                        // Determine status
-                                        if ($completion_percentage == 100) {
-                                            $status_color = 'bg-green-100 text-green-800';
-                                            $status_text = 'Complete';
-                                        } elseif ($completion_percentage >= 75) {
-                                            $status_color = 'bg-blue-100 text-blue-800';
-                                            $status_text = 'Nearly Complete';
-                                        } elseif ($completion_percentage >= 50) {
-                                            $status_color = 'bg-yellow-100 text-yellow-800';
-                                            $status_text = 'In Progress';
-                                        } else {
-                                            $status_color = 'bg-red-100 text-red-800';
-                                            $status_text = 'Low Response';
-                                        }
-                                        ?>
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-6 py-4">
-                                                <div class="text-sm font-medium text-gray-900">
-                                                    <?php echo htmlspecialchars($talk['title']); ?>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                <?php echo date('M j, Y', strtotime($talk['initial_distribution'])); ?>
-                                                <div class="text-xs text-gray-400">
-                                                    <?php echo date('g:i A', strtotime($talk['initial_distribution'])); ?>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                <?php echo date('M j, Y', strtotime($talk['last_sent'])); ?>
-                                                <div class="text-xs text-gray-400">
-                                                    <?php echo date('g:i A', strtotime($talk['last_sent'])); ?>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4">
-                                                <div class="flex items-center">
-                                                    <div class="flex-1">
-                                                        <div class="flex justify-between text-sm text-gray-600 mb-1">
-                                                            <span><?php echo $talk['total_confirmed']; ?> of <?php echo $talk['total_distributed']; ?></span>
-                                                            <span><?php echo number_format($completion_percentage, 1); ?>%</span>
-                                                        </div>
-                                                        <div class="w-full bg-gray-200 rounded-full h-2">
-                                                            <div class="bg-blue-600 h-2 rounded-full" style="width: <?php echo $completion_percentage; ?>%"></div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full <?php echo $status_color; ?>">
-                                                    <?php echo $status_text; ?>
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <a href="talk_details.php?id=<?php echo $talk['id']; ?>" 
-                                                   class="text-blue-600 hover:text-blue-900 mr-3">
-                                                    View Details
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
+<!-- Replace the tbody section in your history.php with this corrected version: -->
+
+<tbody class="bg-white divide-y divide-gray-200">
+    <?php foreach ($past_talks as $talk): ?>
+        <?php
+        $completion_percentage = $talk['total_distributed'] > 0 ? 
+            ($talk['total_confirmed'] / $talk['total_distributed']) * 100 : 0;
+        
+        // Determine status - CORRECTED LOGIC
+        if ($talk['total_distributed'] == 0) {
+            $status = 'Never Distributed';
+            $status_color = 'bg-gray-100 text-gray-800';
+        } elseif ($talk['total_confirmed'] == $talk['total_distributed']) {
+            $status = 'Complete';
+            $status_color = 'bg-green-100 text-green-800';
+        } else {
+            $status = 'In Progress';
+            $status_color = 'bg-yellow-100 text-yellow-800';
+        }
+        ?>
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">
+                    <?php echo htmlspecialchars($talk['title']); ?>
+                </div>
+                <div class="text-sm text-gray-500">
+                    Created: <?php echo date('M j, Y', strtotime($talk['created_at'])); ?>
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <?php if ($talk['initial_distribution']): ?>
+                    <div class="font-medium text-gray-900">
+                        <?php echo date('M j, Y', strtotime($talk['initial_distribution'])); ?>
+                    </div>
+                    <div class="text-xs">
+                        <?php echo date('g:i A', strtotime($talk['initial_distribution'])); ?>
+                    </div>
+                <?php else: ?>
+                    <span class="text-gray-400 italic">Not distributed</span>
+                <?php endif; ?>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <?php if ($talk['last_sent'] && $talk['last_sent'] !== $talk['initial_distribution']): ?>
+                    <div class="font-medium text-gray-900">
+                        <?php echo date('M j, Y', strtotime($talk['last_sent'])); ?>
+                    </div>
+                    <div class="text-xs">
+                        <?php echo date('g:i A', strtotime($talk['last_sent'])); ?>
+                    </div>
+                <?php elseif ($talk['initial_distribution']): ?>
+                    <span class="text-gray-400 italic">Same as initial</span>
+                <?php else: ?>
+                    <span class="text-gray-400 italic">Never sent</span>
+                <?php endif; ?>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                    <div class="flex-1">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                                 style="width: <?php echo $completion_percentage; ?>%"></div>
+                        </div>
+                    </div>
+                    <div class="ml-3 text-sm font-medium text-gray-900">
+                        <?php echo $talk['total_confirmed']; ?>/<?php echo $talk['total_distributed']; ?>
+                    </div>
+                </div>
+                <div class="text-xs text-gray-500 mt-1">
+                    <?php echo round($completion_percentage); ?>% complete
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php echo $status_color; ?>">
+                    <?php echo $status; ?>
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <a href="talk_details.php?id=<?php echo $talk['id']; ?>" 
+                   class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
+                    <i data-lucide="eye" class="w-3 h-3 mr-1"></i>
+                    View Details
+                </a>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+</tbody>
                             </table>
                         </div>
                     <?php else: ?>

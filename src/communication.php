@@ -16,10 +16,9 @@ function getCommEmployees($conn) {
     $role_ids = implode(',', COMMUNICATION_EMPLOYEE_ROLES);
     $sql = "SELECT id, firstName, lastName, email, mobile_phone as phone, 
                    CONCAT(firstName, ' ', lastName) as name,
-                   roleId, isActive
+                   roleId
             FROM users 
             WHERE roleId IN ($role_ids) 
-            AND isActive = 1
             AND (terminationDate IS NULL OR terminationDate > CURDATE())
             ORDER BY firstName, lastName";
     
@@ -99,7 +98,9 @@ function addSafetyTalk($title, $custom_content, $admin_id, $conn, $content, $qui
         if (!move_uploaded_file($file_info['tmp_name'], $target_file)) {
             return false;
         }
-        $file_path = COMMUNICATION_UPLOAD_URL . $file_name;
+        
+        // Store the secure serving URL instead of direct file path
+        $file_path = '/serve_safety_talk.php?file=' . urlencode($file_name);
         
     } elseif ($content['type'] === 'website') {
         $file_path = $content['data'];
@@ -132,11 +133,13 @@ function addSafetyTalk($title, $custom_content, $admin_id, $conn, $content, $qui
  * Get safety talk by ID
  * @param int $talk_id Safety talk ID
  * @param mysqli $conn Database connection
- * @return array|null Talk data or null if not found
+ * @return array|null Talk data or null
  */
 function getSafetyTalkById($talk_id, $conn) {
     $stmt = $conn->prepare("SELECT * FROM safety_talks WHERE id = ?");
-    if (!$stmt) return null;
+    if (!$stmt) {
+        return null;
+    }
     
     $stmt->bind_param("i", $talk_id);
     $stmt->execute();
@@ -146,71 +149,6 @@ function getSafetyTalkById($talk_id, $conn) {
     
     return $talk;
 }
-
-/**
- * Archive safety talk
- * @param int $talk_id Safety talk ID
- * @param mysqli $conn Database connection
- * @return bool Success status
- */
-function archiveSafetyTalk($talk_id, $conn) {
-    $stmt = $conn->prepare("UPDATE safety_talks SET is_archived = 1 WHERE id = ?");
-    if (!$stmt) return false;
-    
-    $stmt->bind_param("i", $talk_id);
-    $success = $stmt->execute();
-    $stmt->close();
-    
-    return $success;
-}
-
-/**
- * Unarchive safety talk
- * @param int $talk_id Safety talk ID
- * @param mysqli $conn Database connection
- * @return bool Success status
- */
-function unarchiveSafetyTalk($talk_id, $conn) {
-    $stmt = $conn->prepare("UPDATE safety_talks SET is_archived = 0 WHERE id = ?");
-    if (!$stmt) return false;
-    
-    $stmt->bind_param("i", $talk_id);
-    $success = $stmt->execute();
-    $stmt->close();
-    
-    return $success;
-}
-
-/**
- * Delete safety talk and all associated records
- * @param int $talk_id Safety talk ID
- * @param mysqli $conn Database connection
- * @return bool Success status
- */
-function deleteSafetyTalkAndRecords($talk_id, $conn) {
-    // Get file path for cleanup
-    $talk = getSafetyTalkById($talk_id, $conn);
-    
-    // Delete the safety talk (cascading deletes will handle related records)
-    $stmt = $conn->prepare("DELETE FROM safety_talks WHERE id = ?");
-    if (!$stmt) return false;
-    
-    $stmt->bind_param("i", $talk_id);
-    $success = $stmt->execute();
-    $stmt->close();
-    
-    // Clean up file if exists
-    if ($success && $talk && $talk['file_type'] !== 'website' && !empty($talk['file_path'])) {
-        $file_path = str_replace(COMMUNICATION_UPLOAD_URL, COMMUNICATION_UPLOAD_DIR, $talk['file_path']);
-        if (file_exists($file_path)) {
-            unlink($file_path);
-        }
-    }
-    
-    return $success;
-}
-
-// --- Distribution Functions ---
 
 /**
  * Distribute safety talk to employees
@@ -242,7 +180,14 @@ function distributeTalk($safety_talk_id, $employee_ids, $conn) {
     }
 
     foreach ($employee_ids as $employee_id) {
-        $employee = getUserById($conn, $employee_id); // Using existing SafetyHub function
+        // Get employee using existing SafetyHub function
+        $stmt = $conn->prepare("SELECT id, firstName, lastName, email FROM users WHERE id = ?");
+        $stmt->bind_param("i", $employee_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $employee = $result->fetch_assoc();
+        $stmt->close();
+        
         if (!$employee) {
             $report['errors'][] = "Employee ID $employee_id not found.";
             continue;
@@ -302,8 +247,6 @@ function generateUniqueToken($length = 64) {
     return bin2hex(random_bytes($length / 2));
 }
 
-// --- Reporting Functions ---
-
 /**
  * Get pending signatures report
  * @param mysqli $conn Database connection
@@ -337,7 +280,30 @@ function getPendingSignaturesReport($conn) {
 }
 
 /**
- * Get safety talk history
+ * Get overall status report
+ * @param mysqli $conn Database connection
+ * @return array Overall status data
+ */
+function getOverallStatusReport($conn) {
+    $sql = "SELECT 
+                COUNT(DISTINCT st.id) as total_talks,
+                COUNT(DISTINCT d.id) as total_distributions,
+                COUNT(DISTINCT c.id) as total_confirmations
+            FROM safety_talks st
+            LEFT JOIN distributions d ON st.id = d.safety_talk_id
+            LEFT JOIN confirmations c ON d.id = c.distribution_id
+            WHERE st.is_archived = 0";
+    
+    $result = $conn->query($sql);
+    if (!$result) {
+        error_log("Overall Status Report SQL Error: " . $conn->error);
+        return [];
+    }
+    return $result->fetch_assoc();
+}
+
+/**
+ * Get safety talk history - CORRECTED VERSION
  * @param mysqli $conn Database connection
  * @return array History data
  */
@@ -346,14 +312,14 @@ function getPastSafetyTalks($conn) {
                    st.first_distributed_at as initial_distribution, 
                    MAX(d.sent_at) as last_sent, 
                    COUNT(DISTINCT d.id) as total_distributed, 
-                   COUNT(c.id) as total_confirmed 
+                   COUNT(c.id) as total_confirmed,
+                   st.created_at 
             FROM safety_talks st 
-            JOIN distributions d ON st.id = d.safety_talk_id 
+            LEFT JOIN distributions d ON st.id = d.safety_talk_id 
             LEFT JOIN confirmations c ON d.id = c.distribution_id 
             WHERE st.is_archived = 0 
-            AND st.first_distributed_at IS NOT NULL 
-            GROUP BY st.id, st.title, st.first_distributed_at 
-            ORDER BY last_sent DESC";
+            GROUP BY st.id, st.title, st.first_distributed_at, st.created_at
+            ORDER BY st.created_at DESC";
     
     $result = $conn->query($sql);
     if (!$result) {
@@ -375,12 +341,11 @@ function getArchivedSafetyTalks($conn) {
                    COUNT(DISTINCT d.id) as total_distributed, 
                    COUNT(c.id) as total_confirmed 
             FROM safety_talks st 
-            JOIN distributions d ON st.id = d.safety_talk_id 
+            LEFT JOIN distributions d ON st.id = d.safety_talk_id 
             LEFT JOIN confirmations c ON d.id = c.distribution_id 
             WHERE st.is_archived = 1 
-            AND st.first_distributed_at IS NOT NULL 
             GROUP BY st.id, st.title, st.first_distributed_at 
-            ORDER BY last_sent DESC";
+            ORDER BY st.first_distributed_at DESC";
     
     $result = $conn->query($sql);
     if (!$result) {
@@ -391,25 +356,110 @@ function getArchivedSafetyTalks($conn) {
 }
 
 /**
- * Get orphaned safety talks (no distributions)
+ * Update safety talk content
+ * @param int $talk_id Safety talk ID
+ * @param string $new_content New HTML content
  * @param mysqli $conn Database connection
- * @return array Orphaned talks data
+ * @return bool Success status
  */
-function getOrphanedSafetyTalks($conn) {
-    $sql = "SELECT st.id, st.title, st.created_at, 
-                   CONCAT(u.firstName, ' ', u.lastName) as created_by_name
-            FROM safety_talks st
-            LEFT JOIN distributions d ON st.id = d.safety_talk_id
-            LEFT JOIN users u ON st.created_by_admin_id = u.id
-            WHERE d.id IS NULL
-            ORDER BY st.created_at DESC";
+function updateSafetyTalkContent($talk_id, $new_content, $conn) {
+    $stmt = $conn->prepare("UPDATE safety_talks SET custom_content = ? WHERE id = ?");
+    if (!$stmt) return false;
     
-    $result = $conn->query($sql);
-    if (!$result) {
-        error_log("Get Orphaned Safety Talks SQL Error: " . $conn->error);
-        return [];
+    $stmt->bind_param("si", $new_content, $talk_id);
+    $success = $stmt->execute();
+    $stmt->close();
+    
+    return $success;
+}
+
+/**
+ * Update safety talk title
+ * @param int $talk_id Safety talk ID
+ * @param string $title New title
+ * @param mysqli $conn Database connection
+ * @return bool Success status
+ */
+function updateSafetyTalkTitle($talk_id, $title, $conn) {
+    $stmt = $conn->prepare("UPDATE safety_talks SET title = ? WHERE id = ?");
+    if (!$stmt) return false;
+    
+    $stmt->bind_param("si", $title, $talk_id);
+    $success = $stmt->execute();
+    $stmt->close();
+    
+    return $success;
+}
+
+/**
+ * Update safety talk file/website attachment
+ * @param int $talk_id Safety talk ID
+ * @param string $file_path New file path or URL
+ * @param string $file_type File type (pdf, mp4, website)
+ * @param mysqli $conn Database connection
+ * @return bool Success status
+ */
+function updateSafetyTalkAttachment($talk_id, $file_path, $file_type, $conn) {
+    $stmt = $conn->prepare("UPDATE safety_talks SET file_path = ?, file_type = ? WHERE id = ?");
+    if (!$stmt) return false;
+    
+    $stmt->bind_param("ssi", $file_path, $file_type, $talk_id);
+    $success = $stmt->execute();
+    $stmt->close();
+    
+    return $success;
+}
+
+/**
+ * Update quiz for existing safety talk
+ * @param int $talk_id Safety talk ID
+ * @param array $quiz_data Quiz questions and answers
+ * @param mysqli $conn Database connection
+ * @return bool Success status
+ */
+function updateQuiz($talk_id, $quiz_data, $conn) {
+    // Delete existing quiz questions (cascading delete will handle answers)
+    $stmt = $conn->prepare("DELETE FROM quiz_questions WHERE safety_talk_id = ?");
+    $stmt->bind_param("i", $talk_id);
+    
+    if ($stmt->execute()) {
+        $stmt->close();
+        saveQuiz($talk_id, $quiz_data, $conn);
+        return true;
     }
-    return $result->fetch_all(MYSQLI_ASSOC);
+    return false;
+}
+
+/**
+ * Get distribution details by ID for resending notifications
+ * @param int $distribution_id Distribution ID
+ * @param mysqli $conn Database connection
+ * @return array|null Distribution details or null
+ */
+function getDistributionById($distribution_id, $conn) {
+    $stmt = $conn->prepare("
+        SELECT d.*, 
+               CONCAT(u.firstName, ' ', u.lastName) as employee_name,
+               u.email as employee_email, 
+               u.mobile_phone as employee_phone,
+               st.title as safety_talk_title
+        FROM distributions d
+        JOIN users u ON d.employee_id = u.id
+        JOIN safety_talks st ON d.safety_talk_id = st.id
+        WHERE d.id = ?
+    ");
+    
+    if (!$stmt) {
+        return null;
+    }
+    
+    $stmt->bind_param("i", $distribution_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $distribution = $result->fetch_assoc();
+    $stmt->close();
+    
+    return $distribution;
 }
 
 /**
@@ -459,8 +509,6 @@ function getTalkDetails($talk_id, $conn) {
     
     return $details;
 }
-
-// --- Quiz Functions ---
 
 /**
  * Save quiz for safety talk
@@ -540,8 +588,6 @@ function saveQuizResult($distribution_id, $score, $passed, $conn) {
     return $stmt->execute();
 }
 
-// --- Confirmation Functions ---
-
 /**
  * Save safety talk confirmation
  * @param int $distribution_id Distribution ID
@@ -571,10 +617,10 @@ function saveTalkConfirmation($distribution_id, $signature_base64, $ip_address, 
 }
 
 /**
- * Check if user has confirmed a distribution
+ * Check if distribution has been confirmed
  * @param int $distribution_id Distribution ID
  * @param mysqli $conn Database connection
- * @return bool Whether confirmation exists
+ * @return bool Whether confirmed
  */
 function hasConfirmed($distribution_id, $conn) {
     $stmt = $conn->prepare("SELECT id FROM confirmations WHERE distribution_id = ?");
@@ -585,10 +631,10 @@ function hasConfirmed($distribution_id, $conn) {
     $stmt->bind_param("i", $distribution_id);
     $stmt->execute();
     $result = $stmt->get_result();
-    $confirmed = $result->num_rows > 0;
+    $has_confirmed = $result->num_rows > 0;
     $stmt->close();
     
-    return $confirmed;
+    return $has_confirmed;
 }
 
 /**
@@ -621,18 +667,16 @@ function getDistributionByToken($token, $conn) {
 }
 
 /**
- * Update notification count for a distribution
- * @param int $distribution_id Distribution ID
+ * Archive a safety talk
+ * @param int $talk_id Safety talk ID
  * @param mysqli $conn Database connection
  * @return bool Success status
  */
-function incrementNotificationCount($distribution_id, $conn) {
-    $stmt = $conn->prepare("UPDATE distributions SET notification_count = notification_count + 1 WHERE id = ?");
-    if (!$stmt) {
-        return false;
-    }
+function archiveSafetyTalk($talk_id, $conn) {
+    $stmt = $conn->prepare("UPDATE safety_talks SET is_archived = 1 WHERE id = ?");
+    if (!$stmt) return false;
     
-    $stmt->bind_param("i", $distribution_id);
+    $stmt->bind_param("i", $talk_id);
     $success = $stmt->execute();
     $stmt->close();
     
@@ -640,30 +684,90 @@ function incrementNotificationCount($distribution_id, $conn) {
 }
 
 /**
- * Get distributions for reminder notifications
+ * Delete safety talk and all associated records
+ * @param int $talk_id Safety talk ID
  * @param mysqli $conn Database connection
- * @return array Pending distributions
+ * @return bool Success status
  */
-function getPendingDistributionsForReminders($conn) {
-    $sql = "SELECT d.id, d.unique_link_token, 
-                   CONCAT(u.firstName, ' ', u.lastName) as employee_name,
-                   u.email, u.mobile_phone as phone, 
-                   st.title as safety_talk_title 
-            FROM distributions d 
-            JOIN users u ON d.employee_id = u.id 
-            JOIN safety_talks st ON d.safety_talk_id = st.id 
-            LEFT JOIN confirmations c ON d.id = c.distribution_id 
-            WHERE c.id IS NULL 
-            AND st.is_archived = 0 
-            AND st.first_distributed_at IS NOT NULL 
-            AND st.first_distributed_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
-    
-    $result = $conn->query($sql);
-    if (!$result) {
-        error_log("Get Pending for Reminders SQL Error: " . $conn->error);
-        return [];
+function deleteSafetyTalkAndRecords($talk_id, $conn) {
+    // Get talk details first to check for files to delete
+    $talk = getSafetyTalkById($talk_id, $conn);
+    if (!$talk) {
+        return false;
     }
-    return $result->fetch_all(MYSQLI_ASSOC);
+    
+    // Start transaction
+    $conn->begin_transaction();
+    
+    try {
+        // Delete quiz answers first (foreign key constraint)
+        $stmt = $conn->prepare("
+            DELETE qa FROM quiz_answers qa 
+            JOIN quiz_questions qq ON qa.question_id = qq.id 
+            WHERE qq.safety_talk_id = ?
+        ");
+        $stmt->bind_param("i", $talk_id);
+        $stmt->execute();
+        $stmt->close();
+        
+        // Delete quiz questions
+        $stmt = $conn->prepare("DELETE FROM quiz_questions WHERE safety_talk_id = ?");
+        $stmt->bind_param("i", $talk_id);
+        $stmt->execute();
+        $stmt->close();
+        
+        // Delete quiz results
+        $stmt = $conn->prepare("
+            DELETE qr FROM quiz_results qr 
+            JOIN distributions d ON qr.distribution_id = d.id 
+            WHERE d.safety_talk_id = ?
+        ");
+        $stmt->bind_param("i", $talk_id);
+        $stmt->execute();
+        $stmt->close();
+        
+        // Delete confirmations
+        $stmt = $conn->prepare("
+            DELETE c FROM confirmations c 
+            JOIN distributions d ON c.distribution_id = d.id 
+            WHERE d.safety_talk_id = ?
+        ");
+        $stmt->bind_param("i", $talk_id);
+        $stmt->execute();
+        $stmt->close();
+        
+        // Delete distributions
+        $stmt = $conn->prepare("DELETE FROM distributions WHERE safety_talk_id = ?");
+        $stmt->bind_param("i", $talk_id);
+        $stmt->execute();
+        $stmt->close();
+        
+        // Finally delete the safety talk
+        $stmt = $conn->prepare("DELETE FROM safety_talks WHERE id = ?");
+        $stmt->bind_param("i", $talk_id);
+        $stmt->execute();
+        $stmt->close();
+        
+        // Commit transaction
+        $conn->commit();
+        
+        // Clean up file if exists
+        if ($talk && $talk['file_type'] !== 'website' && !empty($talk['file_path'])) {
+            $file_path = str_replace('/serve_safety_talk.php?file=', '', $talk['file_path']);
+            $file_path = COMMUNICATION_UPLOAD_DIR . urldecode($file_path);
+            if (file_exists($file_path)) {
+                unlink($file_path);
+            }
+        }
+        
+        return true;
+        
+    } catch (Exception $e) {
+        // Rollback transaction on error
+        $conn->rollback();
+        error_log("Delete Safety Talk Error: " . $e->getMessage());
+        return false;
+    }
 }
 
 /**
@@ -717,18 +821,35 @@ function sendReminderNotification($distribution_id, $method, $conn) {
         
         if (!$email_sent) {
             $result['errors'][] = "Email reminder failed";
+        } else {
+            $result['success'] = true;
         }
     }
     
-    // TODO: Implement SMS reminder if needed
-    // if ($method === 'sms' || $method === 'both') {
-    //     // SMS implementation would go here
-    // }
+    // Send SMS reminder if requested
+    if ($method === 'sms' || $method === 'both') {
+        if (!empty($distribution['phone'])) {
+            $sms_sent = sendSafetyTalkSMS(
+                $distribution['phone'],
+                $distribution['employee_name'],
+                $distribution['safety_talk_title'] . " (REMINDER)",
+                $view_link
+            );
+            
+            if (!$sms_sent) {
+                $result['errors'][] = "SMS reminder failed";
+            } else {
+                $result['success'] = true;
+            }
+        } else {
+            $result['errors'][] = "No phone number available for SMS";
+        }
+    }
     
-    // Update notification count
-    if (incrementNotificationCount($distribution_id, $conn)) {
-        $result['success'] = true;
-    } else {
+    // Update notification count if any method was successful
+    if ($result['success'] && incrementNotificationCount($distribution_id, $conn)) {
+        // Successfully updated notification count
+    } else if ($result['success']) {
         $result['errors'][] = "Failed to update notification count";
     }
     
@@ -736,95 +857,20 @@ function sendReminderNotification($distribution_id, $method, $conn) {
 }
 
 /**
- * Get overall status report for all safety talks
- * @param mysqli $conn Database connection
- * @return array Overall status data
- */
-function getOverallStatusReport($conn) {
-    $sql = "SELECT st.title as safety_talk_title, 
-                   COUNT(DISTINCT d.id) as total_distributed, 
-                   COUNT(c.id) as total_confirmed 
-            FROM safety_talks st 
-            LEFT JOIN distributions d ON st.id = d.safety_talk_id 
-            LEFT JOIN confirmations c ON d.id = c.distribution_id 
-            WHERE st.is_archived = 0 
-            GROUP BY st.id, st.title 
-            ORDER BY st.created_at DESC";
-    
-    $result = $conn->query($sql);
-    if (!$result) {
-        error_log("Overall Status Report SQL Error: " . $conn->error);
-        return [];
-    }
-    return $result->fetch_all(MYSQLI_ASSOC);
-}
-
-/**
- * Update safety talk content
- * @param int $talk_id Safety talk ID
- * @param string $new_content New HTML content
+ * Update notification count for a distribution
+ * @param int $distribution_id Distribution ID
  * @param mysqli $conn Database connection
  * @return bool Success status
  */
-function updateSafetyTalkContent($talk_id, $new_content, $conn) {
-    $stmt = $conn->prepare("UPDATE safety_talks SET custom_content = ? WHERE id = ?");
-    if (!$stmt) return false;
+function incrementNotificationCount($distribution_id, $conn) {
+    $stmt = $conn->prepare("UPDATE distributions SET notification_count = notification_count + 1 WHERE id = ?");
+    if (!$stmt) {
+        return false;
+    }
     
-    $stmt->bind_param("si", $new_content, $talk_id);
+    $stmt->bind_param("i", $distribution_id);
     $success = $stmt->execute();
     $stmt->close();
     
     return $success;
-}
-
-/**
- * Update quiz for existing safety talk
- * @param int $talk_id Safety talk ID
- * @param array $quiz_data Quiz questions and answers
- * @param mysqli $conn Database connection
- * @return bool Success status
- */
-function updateQuiz($talk_id, $quiz_data, $conn) {
-    // Delete existing quiz questions (cascading delete will handle answers)
-    $stmt = $conn->prepare("DELETE FROM quiz_questions WHERE safety_talk_id = ?");
-    $stmt->bind_param("i", $talk_id);
-    
-    if ($stmt->execute()) {
-        $stmt->close();
-        saveQuiz($talk_id, $quiz_data, $conn);
-        return true;
-    }
-    return false;
-}
-
-/**
- * Get distribution details by ID for resending notifications
- * @param int $distribution_id Distribution ID
- * @param mysqli $conn Database connection
- * @return array|null Distribution details or null
- */
-function getDistributionById($distribution_id, $conn) {
-    $stmt = $conn->prepare("
-        SELECT d.*, 
-               CONCAT(u.firstName, ' ', u.lastName) as employee_name,
-               u.email as employee_email, 
-               u.mobile_phone as employee_phone,
-               st.title as safety_talk_title
-        FROM distributions d
-        JOIN users u ON d.employee_id = u.id
-        JOIN safety_talks st ON d.safety_talk_id = st.id
-        WHERE d.id = ?
-    ");
-    
-    if (!$stmt) {
-        return null;
-    }
-    
-    $stmt->bind_param("i", $distribution_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $distribution = $result->fetch_assoc();
-    $stmt->close();
-    
-    return $distribution;
 }
