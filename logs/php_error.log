@@ -1,52 +1,13 @@
-[01-Jul-2025 17:57:40 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function incrementNotificationCount() in /home/customer/www/safetyhub.swfunk.com/src/communication.php:462
-Stack trace:
-#0 /home/customer/www/safetyhub.swfunk.com/public_html/communication/talk_details.php(64): sendReminderNotification('4', 'email', Object(mysqli))
-#1 {main}
-  thrown in /home/customer/www/safetyhub.swfunk.com/src/communication.php on line 462
-[01-Jul-2025 17:57:46 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function incrementNotificationCount() in /home/customer/www/safetyhub.swfunk.com/src/communication.php:462
-Stack trace:
-#0 /home/customer/www/safetyhub.swfunk.com/public_html/communication/talk_details.php(64): sendReminderNotification('4', 'sms', Object(mysqli))
-#1 {main}
-  thrown in /home/customer/www/safetyhub.swfunk.com/src/communication.php on line 462
-[01-Jul-2025 19:13:53 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APP_NAME" in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:102
-Stack trace:
-#0 {main}
-  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 102
-[01-Jul-2025 19:13:59 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APP_NAME" in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:102
-Stack trace:
-#0 {main}
-  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 102
-[01-Jul-2025 19:14:08 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APP_NAME" in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:102
-Stack trace:
-#0 {main}
-  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 102
-[01-Jul-2025 19:14:28 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APP_NAME" in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:102
-Stack trace:
-#0 {main}
-  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 102
-[01-Jul-2025 19:16:22 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APP_NAME" in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:102
-Stack trace:
-#0 {main}
-  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 102
-[01-Jul-2025 19:16:26 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APP_NAME" in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:102
-Stack trace:
-#0 {main}
-  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 102
-[01-Jul-2025 19:16:28 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APP_NAME" in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php:102
-Stack trace:
-#0 {main}
-  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/view_talk.php on line 102
-[01-Jul-2025 20:24:16 UTC] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in /home/customer/www/safetyhub.swfunk.com/public_html/communication/debug.php on line 24
-[01-Jul-2025 20:44:02 UTC] Debug - First user data: Array
+[03-Jul-2025 15:47:45 UTC] Debug - First user data: Array
 (
     [id] => 3
     [firstName] => David
     [lastName] => Chen
-    [email] => d.chen@swfunk.com
+    [email] => randy.funk@swfunk.com
     [employeeId] => SWF003
     [roleId] => 3
     [title] => Safety Manager
-    [mobile_phone] => 0
+    [mobile_phone] => 500
     [alt_phone] => 
     [emergency_contact_name] => 
     [emergency_contact_phone] => 
@@ -56,22 +17,16 @@ Stack trace:
     [roleName] => Manager
 )
 
-[01-Jul-2025 20:48:51 UTC] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in /home/customer/www/safetyhub.swfunk.com/public_html/communication/debug.php on line 15
-[01-Jul-2025 20:48:51 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.created_at' in 'field list' in /home/customer/www/safetyhub.swfunk.com/public_html/communication/debug.php:45
-Stack trace:
-#0 /home/customer/www/safetyhub.swfunk.com/public_html/communication/debug.php(45): mysqli->query('SELECT st.id, s...')
-#1 {main}
-  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/communication/debug.php on line 45
-[01-Jul-2025 21:06:54 UTC] Debug - First user data: Array
+[03-Jul-2025 15:48:20 UTC] Debug - First user data: Array
 (
     [id] => 3
     [firstName] => David
     [lastName] => Chen
-    [email] => d.chen@swfunk.com
+    [email] => randy.funk@swfunk.com
     [employeeId] => SWF003
     [roleId] => 3
     [title] => Safety Manager
-    [mobile_phone] => 0
+    [mobile_phone] => 500
     [alt_phone] => 
     [emergency_contact_name] => 
     [emergency_contact_phone] => 
@@ -81,16 +36,377 @@ Stack trace:
     [roleName] => Manager
 )
 
-[01-Jul-2025 21:18:43 UTC] Debug - First user data: Array
+[03-Jul-2025 15:49:19 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "COMM_TWILIO_ACCOUNT_SID" in /home/customer/www/safetyhub.swfunk.com/config/communication.php:223
+Stack trace:
+#0 /home/customer/www/safetyhub.swfunk.com/src/communication.php(820): sendSafetyTalkSMS('500', 'Jessica Taylor', 'Test7 (REMINDER...', 'https://safetyh...')
+#1 /home/customer/www/safetyhub.swfunk.com/public_html/communication/talk_details.php(64): sendReminderNotification('7', 'sms', Object(mysqli))
+#2 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/config/communication.php on line 223
+[03-Jul-2025 15:49:40 UTC] Debug - First user data: Array
 (
     [id] => 3
     [firstName] => David
     [lastName] => Chen
-    [email] => d.chen@swfunk.com
+    [email] => randy.funk@swfunk.com
     [employeeId] => SWF003
     [roleId] => 3
     [title] => Safety Manager
+    [mobile_phone] => 500
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[03-Jul-2025 16:01:22 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => randy.funk@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 500
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[03-Jul-2025 16:01:27 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => randy.funk@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 500
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[03-Jul-2025 17:41:21 UTC] PHP Fatal error:  Cannot redeclare getUserById() (previously declared in /home/customer/www/safetyhub.swfunk.com/src/auth.php:21) in /home/customer/www/safetyhub.swfunk.com/src/communication.php on line 943
+[03-Jul-2025 17:41:24 UTC] PHP Fatal error:  Cannot redeclare getUserById() (previously declared in /home/customer/www/safetyhub.swfunk.com/src/auth.php:21) in /home/customer/www/safetyhub.swfunk.com/src/communication.php on line 943
+[03-Jul-2025 17:52:40 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => randy.funk@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 500
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[03-Jul-2025 17:54:18 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => randy.funk@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 500
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[03-Jul-2025 17:54:21 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => randy.funk@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 500
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[03-Jul-2025 17:54:26 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => randy.funk@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 500
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[03-Jul-2025 17:54:31 UTC] Debug - First user data: Array
+(
+    [id] => 15
+    [firstName] => Laura
+    [lastName] => Clark
+    [email] => l.clark@swfunk.com
+    [employeeId] => SWF015
+    [roleId] => 4
+    [title] => Supervisor
+    [mobile_phone] => 
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 2023-11-10
+    [profilePicture] => 
+    [roleName] => Supervisor
+)
+
+[03-Jul-2025 17:54:33 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => randy.funk@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 500
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[03-Jul-2025 17:54:38 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => randy.funk@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 500
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[03-Jul-2025 17:54:42 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => randy.funk@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 500
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[03-Jul-2025 17:54:49 UTC] Debug - First user data: Array
+(
+    [id] => 18
+    [firstName] => John
+    [lastName] => Doe Sr.
+    [email] => randy.funk07@gmail.com
+    [employeeId] => JD123
+    [roleId] => 5
+    [title] => Field Operator
     [mobile_phone] => 0
+    [alt_phone] => {"mobile":"500-555-0006","alt":"500-555-0006"}
+    [emergency_contact_name] => Jane Doe
+    [emergency_contact_phone] => 500-555-0006
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Employee
+)
+
+[03-Jul-2025 17:54:57 UTC] Debug - First user data: Array
+(
+    [id] => 18
+    [firstName] => John
+    [lastName] => Doe Sr.
+    [email] => randy.funk07@gmail.com
+    [employeeId] => JD123
+    [roleId] => 5
+    [title] => Field Operator
+    [mobile_phone] => 0
+    [alt_phone] => {"mobile":"500-555-0006","alt":"500-555-0006"}
+    [emergency_contact_name] => Jane Doe
+    [emergency_contact_phone] => 500-555-0006
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Employee
+)
+
+[03-Jul-2025 18:00:33 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "COMM_TWILIO_ACCOUNT_SID" in /home/customer/www/safetyhub.swfunk.com/config/communication.php:223
+Stack trace:
+#0 /home/customer/www/safetyhub.swfunk.com/public_html/communication/preview_talk.php(99): sendSafetyTalkSMS('8046415597', 'Test Administra...', '[TEST PREVIEW] ...', 'https://safetyh...')
+#1 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/config/communication.php on line 223
+[03-Jul-2025 18:04:10 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "COMM_TWILIO_ACCOUNT_SID" in /home/customer/www/safetyhub.swfunk.com/config/communication.php:223
+Stack trace:
+#0 /home/customer/www/safetyhub.swfunk.com/public_html/communication/preview_talk.php(99): sendSafetyTalkSMS('+15005550006', 'Test Administra...', '[TEST PREVIEW] ...', 'https://safetyh...')
+#1 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/config/communication.php on line 223
+[03-Jul-2025 18:04:24 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "COMM_TWILIO_ACCOUNT_SID" in /home/customer/www/safetyhub.swfunk.com/config/communication.php:223
+Stack trace:
+#0 /home/customer/www/safetyhub.swfunk.com/public_html/communication/preview_talk.php(99): sendSafetyTalkSMS('+15005550006', 'Test Administra...', '[TEST PREVIEW] ...', 'https://safetyh...')
+#1 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/config/communication.php on line 223
+[03-Jul-2025 18:04:36 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "COMM_TWILIO_ACCOUNT_SID" in /home/customer/www/safetyhub.swfunk.com/config/communication.php:223
+Stack trace:
+#0 /home/customer/www/safetyhub.swfunk.com/public_html/communication/preview_talk.php(99): sendSafetyTalkSMS('+15005550001', 'Test Administra...', '[TEST PREVIEW] ...', 'https://safetyh...')
+#1 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/config/communication.php on line 223
+[03-Jul-2025 18:04:38 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "COMM_TWILIO_ACCOUNT_SID" in /home/customer/www/safetyhub.swfunk.com/config/communication.php:223
+Stack trace:
+#0 /home/customer/www/safetyhub.swfunk.com/public_html/communication/preview_talk.php(99): sendSafetyTalkSMS('+15005550001', 'Test Administra...', '[TEST PREVIEW] ...', 'https://safetyh...')
+#1 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/config/communication.php on line 223
+[03-Jul-2025 18:32:41 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "COMM_TWILIO_ACCOUNT_SID" in /home/customer/www/safetyhub.swfunk.com/config/communication.php:223
+Stack trace:
+#0 /home/customer/www/safetyhub.swfunk.com/public_html/communication/preview_talk.php(99): sendSafetyTalkSMS('+18046415597', 'Test Administra...', '[TEST PREVIEW] ...', 'https://safetyh...')
+#1 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/config/communication.php on line 223
+[03-Jul-2025 22:43:58 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => randy.funk@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 500
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[04-Jul-2025 01:21:39 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => randy.funk@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 500
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[04-Jul-2025 02:00:59 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => randy.funk@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 500
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[04-Jul-2025 02:01:01 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => randy.funk@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 500
+    [alt_phone] => 
+    [emergency_contact_name] => 
+    [emergency_contact_phone] => 
+    [type] => Employee
+    [terminationDate] => 
+    [profilePicture] => 
+    [roleName] => Manager
+)
+
+[04-Jul-2025 02:01:33 UTC] Debug - First user data: Array
+(
+    [id] => 3
+    [firstName] => David
+    [lastName] => Chen
+    [email] => randy.funk@swfunk.com
+    [employeeId] => SWF003
+    [roleId] => 3
+    [title] => Safety Manager
+    [mobile_phone] => 500
     [alt_phone] => 
     [emergency_contact_name] => 
     [emergency_contact_phone] => 

@@ -1,6 +1,6 @@
 <?php
 // /public_html/communication/create_talk.php
-// Create and Distribute Safety Talk
+// Create and Distribute Safety Talk with New Preview/Test Workflow
 
 // Include core configuration (automatically loads navigation)
 require_once __DIR__ . '/../../config/config.php';
@@ -21,8 +21,8 @@ $message = '';
 $error = '';
 $warning = '';
 
-// Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// Handle form submission - Create as DRAFT first
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
     $title = trim($_POST['title'] ?? '');
     $custom_content = $_POST['custom_content'] ?? '';
     $talk_type = $_POST['talk_type'] ?? 'content_only';
@@ -57,24 +57,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         if (!$error) {
-            // Create the safety talk
+            // Create the safety talk as DRAFT (not distributed yet)
             $talk_id = addSafetyTalk($title, $custom_content, $_SESSION['user_id'], $conn, $content, $quiz_data);
             
             if ($talk_id) {
-                // Distribute to selected employees
-                $result = distributeTalk($talk_id, $employee_ids, $conn);
+                // Store employee IDs in session for later distribution
+                $_SESSION['pending_distribution'] = [
+                    'talk_id' => $talk_id,
+                    'employee_ids' => $employee_ids
+                ];
                 
-                if ($result['success_count'] > 0) {
-                    $message = "Safety talk created and distributed successfully to {$result['success_count']} employees.";
-                    if (!empty($result['skipped'])) {
-                        $warning = "The following employees had already received this talk and were skipped: " . implode(', ', $result['skipped']);
-                    }
-                    if (!empty($result['errors'])) {
-                        $error = "Some notifications failed: " . implode(', ', $result['errors']);
-                    }
-                } elseif (!$error) {
-                    $error = "Failed to distribute the safety talk.";
-                }
+                // Redirect to preview/test page
+                header('Location: preview_talk.php?id=' . $talk_id);
+                exit;
             } else {
                 $error = "Failed to create the safety talk.";
             }
@@ -119,12 +114,33 @@ $employees = getCommEmployees($conn);
                     <div class="flex items-center justify-between">
                         <div>
                             <h1 class="text-3xl font-bold text-gray-900">Create Safety Talk</h1>
-                            <p class="text-gray-600 mt-2">Create and distribute a new safety communication</p>
+                            <p class="text-gray-600 mt-2">Create a safety communication and preview before distributing</p>
                         </div>
                         <a href="index.php" class="inline-flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
                             <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
                             Back to Dashboard
                         </a>
+                    </div>
+                </div>
+                
+                <!-- Process Steps -->
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Safety Talk Creation Process</h2>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">1</div>
+                            <span class="ml-2 text-sm font-medium text-blue-600">Create Content</span>
+                        </div>
+                        <i data-lucide="arrow-right" class="w-4 h-4 text-gray-400"></i>
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gray-300 text-white rounded-full flex items-center justify-center text-sm font-medium">2</div>
+                            <span class="ml-2 text-sm text-gray-500">Preview & Test</span>
+                        </div>
+                        <i data-lucide="arrow-right" class="w-4 h-4 text-gray-400"></i>
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gray-300 text-white rounded-full flex items-center justify-center text-sm font-medium">3</div>
+                            <span class="ml-2 text-sm text-gray-500">Distribute</span>
+                        </div>
                     </div>
                 </div>
                 
@@ -271,14 +287,14 @@ $employees = getCommEmployees($conn);
                     <div class="bg-white rounded-lg shadow p-6">
                         <div class="flex items-center justify-between">
                             <div class="text-sm text-gray-600">
-                                Safety talk will be distributed immediately to selected employees
+                                Safety talk will be created as draft for preview and testing
                             </div>
                             <div class="space-x-3">
                                 <a href="index.php" class="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
                                     Cancel
                                 </a>
                                 <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
-                                    Create & Distribute
+                                    Create & Preview
                                 </button>
                             </div>
                         </div>

@@ -122,7 +122,11 @@ if (isset($_GET['message'])) {
     <div class="flex h-screen">
         
         <!-- Automatic Navigation -->
-        <?php renderNavigation(); ?>
+        <?php 
+        // Get navigation HTML
+        global $navigation_html;
+        echo $navigation_html; 
+        ?>
         
         <!-- Main Content Area -->
         <main class="flex-1 overflow-auto p-6">

@@ -48,6 +48,46 @@ if (!$distribution) {
     die('Safety talk not found or link has expired.');
 }
 
+// Load quiz data if the safety talk has a quiz
+if ($distribution && $distribution['has_quiz']) {
+    // Get quiz questions for this safety talk
+    $stmt_quiz = $conn->prepare("
+        SELECT qq.id, qq.question_text, qq.question_order
+        FROM quiz_questions qq 
+        WHERE qq.safety_talk_id = ? 
+        ORDER BY qq.question_order
+    ");
+    if ($stmt_quiz) {
+        $stmt_quiz->bind_param("i", $distribution['safety_talk_id']);
+        $stmt_quiz->execute();
+        $quiz_result = $stmt_quiz->get_result();
+        
+        $distribution['quiz'] = ['questions' => []];
+        while ($question = $quiz_result->fetch_assoc()) {
+            // Get answers for this question
+            $stmt_answers = $conn->prepare("
+                SELECT id, answer_text, is_correct, answer_order
+                FROM quiz_answers 
+                WHERE question_id = ? 
+                ORDER BY answer_order
+            ");
+            if ($stmt_answers) {
+                $stmt_answers->bind_param("i", $question['id']);
+                $stmt_answers->execute();
+                $answers_result = $stmt_answers->get_result();
+                
+                $question['answers'] = [];
+                while ($answer = $answers_result->fetch_assoc()) {
+                    $question['answers'][] = $answer;
+                }
+                $stmt_answers->close();
+            }
+            $distribution['quiz']['questions'][] = $question;
+        }
+        $stmt_quiz->close();
+    }
+}
+
 // Check if already confirmed
 $has_confirmed = false;
 try {
@@ -391,8 +431,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$has_confirmed) {
                 </div>
             <?php endif; ?>
             
+            <!-- Quiz Section (if talk has quiz) -->
+            <?php if (!empty($distribution['quiz']['questions']) && !$has_confirmed): ?>
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Knowledge Check Required</h2>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <p class="text-blue-800">
+                            <i data-lucide="help-circle" class="w-5 h-5 inline mr-2"></i>
+                            This safety communication includes a knowledge check. You must complete and pass the quiz before you can submit your confirmation.
+                        </p>
+                    </div>
+                    <button type="button" id="start-quiz-btn" class="bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        <i data-lucide="play-circle" class="w-5 h-5 inline mr-2"></i>
+                        Start Knowledge Check
+                    </button>
+                </div>
+            <?php endif; ?>
+            
             <!-- Confirmation Form -->
-            <div class="bg-white rounded-lg shadow-sm p-4">
+            <?php if (!empty($distribution['quiz']['questions'])): ?>
+                <!-- Quiz must be completed first -->
+                <div class="bg-white rounded-lg shadow-sm p-4" id="confirmation-section" style="<?php echo !$has_confirmed ? 'display: none;' : ''; ?>">
+            <?php else: ?>
+                <!-- No quiz, show confirmation immediately -->
+                <div class="bg-white rounded-lg shadow-sm p-4" id="confirmation-section">
+            <?php endif; ?>
                 <div class="text-center mb-6">
                     <h2 class="text-lg font-semibold text-gray-900">Ready to Confirm?</h2>
                     <p class="text-sm text-gray-600">Check the box and add your signature</p>
@@ -474,7 +537,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$has_confirmed) {
         
     </div>
 
+    <!-- Quiz Modal -->
+    <?php if (!empty($distribution['quiz']['questions']) && !$has_confirmed): ?>
+    <div id="quiz-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+            
+            <!-- Quiz Header -->
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-gray-900">Knowledge Check</h3>
+                <p class="text-gray-600">Answer all questions correctly to proceed with confirmation.</p>
+                <div class="mt-2">
+                    <div class="bg-gray-200 rounded-full h-2">
+                        <div id="quiz-progress" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p id="quiz-counter" class="text-sm text-gray-600 mt-1">Question 1 of <?php echo count($distribution['quiz']['questions']); ?></p>
+                </div>
+            </div>
+            
+            <!-- Quiz View -->
+            <div id="quiz-view">
+                <div id="quiz-body" class="mb-6">
+                    <!-- Questions will be populated by JavaScript -->
+                </div>
+                
+                <div class="flex justify-between">
+                    <button type="button" id="quiz-prev-btn" class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50" style="display: none;">
+                        Previous
+                    </button>
+                    <button type="button" id="quiz-next-btn" class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
+                        Next Question
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Quiz Results View -->
+            <div id="quiz-results-view" style="display: none;">
+                <div class="text-center">
+                    <div id="quiz-result-icon" class="w-16 h-16 mx-auto mb-4"></div>
+                    <h4 id="quiz-result-header" class="text-2xl font-bold mb-2"></h4>
+                    <p id="quiz-result-score" class="text-lg text-gray-600 mb-4"></p>
+                    <div id="quiz-result-summary" class="text-left bg-gray-50 rounded-lg p-4 mb-4"></div>
+                    <div id="quiz-result-actions">
+                        <button type="button" id="quiz-retake-btn" class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 mr-3">
+                            Retake Quiz
+                        </button>
+                        <button type="button" id="quiz-continue-btn" class="px-6 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700" style="display: none;">
+                            Continue to Confirmation
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <?php endif; ?>
+
     <script>
+        // Pass quiz data to JavaScript
+        window.quizData = <?php echo json_encode($distribution['quiz']['questions'] ?? []); ?>;
+        window.hasQuiz = <?php echo json_encode(!empty($distribution['quiz']['questions'])); ?>;
+        
         // Initialize Lucide icons
         lucide.createIcons();
         
@@ -509,6 +631,178 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$has_confirmed) {
                     alert('Please provide your signature before submitting.');
                 }
             });
+
+            // Quiz functionality
+            if (window.hasQuiz && window.quizData.length > 0) {
+                const startQuizBtn = document.getElementById('start-quiz-btn');
+                const quizModal = document.getElementById('quiz-modal');
+                const quizView = document.getElementById('quiz-view');
+                const resultsView = document.getElementById('quiz-results-view');
+                const quizCounter = document.getElementById('quiz-counter');
+                const quizProgress = document.getElementById('quiz-progress');
+                const quizBody = document.getElementById('quiz-body');
+                const quizNextBtn = document.getElementById('quiz-next-btn');
+                const quizPrevBtn = document.getElementById('quiz-prev-btn');
+                const resultHeader = document.getElementById('quiz-result-header');
+                const resultScore = document.getElementById('quiz-result-score');
+                const resultSummary = document.getElementById('quiz-result-summary');
+                const resultIcon = document.getElementById('quiz-result-icon');
+                const retakeBtn = document.getElementById('quiz-retake-btn');
+                const continueBtn = document.getElementById('quiz-continue-btn');
+                const confirmationSection = document.getElementById('confirmation-section');
+
+                let currentQuestionIndex = 0;
+                let userAnswers = new Array(window.quizData.length);
+
+                function showQuestion(index) {
+                    const question = window.quizData[index];
+                    const progress = ((index + 1) / window.quizData.length) * 100;
+                    
+                    quizCounter.textContent = `Question ${index + 1} of ${window.quizData.length}`;
+                    quizProgress.style.width = progress + '%';
+                    
+                    let answersHtml = '';
+                    question.answers.forEach((answer, i) => {
+                        const checked = userAnswers[index] === i ? 'checked' : '';
+                        answersHtml += `
+                            <label class="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer mb-2">
+                                <input type="radio" name="question_${index}" value="${i}" ${checked}
+                                       class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                <span class="text-gray-700">${answer.answer_text}</span>
+                            </label>
+                        `;
+                    });
+                    
+                    quizBody.innerHTML = `
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-4">${question.question_text}</h4>
+                            <div class="space-y-2">${answersHtml}</div>
+                        </div>
+                    `;
+                    
+                    // Add event listeners for radio buttons
+                    quizBody.querySelectorAll(`input[name="question_${index}"]`).forEach(radio => {
+                        radio.addEventListener('change', (e) => {
+                            userAnswers[index] = parseInt(e.target.value);
+                        });
+                    });
+                    
+                    // Update button states
+                    quizPrevBtn.style.display = index > 0 ? 'block' : 'none';
+                    quizNextBtn.textContent = (index === window.quizData.length - 1) ? 'Submit Answers' : 'Next Question';
+                }
+
+                function showResults() {
+                    let correctCount = 0;
+                    let summaryHtml = '<div class="space-y-3">';
+                    
+                    window.quizData.forEach((question, qIndex) => {
+                        const correctAnswerIndex = question.answers.findIndex(a => a.is_correct == 1);
+                        const userAnswerIndex = userAnswers[qIndex];
+                        const isCorrect = userAnswerIndex === correctAnswerIndex;
+                        
+                        if (isCorrect) {
+                            correctCount++;
+                        }
+                        
+                        const statusClass = isCorrect ? 'text-green-600' : 'text-red-600';
+                        const statusIcon = isCorrect ? '✓' : '✗';
+                        const userAnswerText = (userAnswerIndex !== undefined && question.answers[userAnswerIndex]) 
+                            ? question.answers[userAnswerIndex].answer_text 
+                            : 'No answer';
+                        
+                        summaryHtml += `
+                            <div class="border border-gray-200 rounded-lg p-3">
+                                <div class="font-medium ${statusClass}">
+                                    ${statusIcon} Question ${qIndex + 1}: ${question.question_text}
+                                </div>
+                                <div class="text-sm text-gray-600 mt-1">
+                                    Your answer: ${userAnswerText}
+                                </div>
+                                ${!isCorrect ? `<div class="text-sm text-green-600 mt-1">Correct answer: ${question.answers[correctAnswerIndex].answer_text}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                    summaryHtml += '</div>';
+                    
+                    const score = (correctCount / window.quizData.length) * 100;
+                    const passed = score >= 75; // 75% passing score
+                    
+                    quizView.style.display = 'none';
+                    resultsView.style.display = 'block';
+                    
+                    resultScore.textContent = `Score: ${score.toFixed(0)}% (${correctCount}/${window.quizData.length} correct)`;
+                    resultSummary.innerHTML = summaryHtml;
+                    
+                    if (passed) {
+                        resultHeader.textContent = 'Congratulations! You passed!';
+                        resultHeader.className = 'text-2xl font-bold mb-2 text-green-600';
+                        resultIcon.innerHTML = '<i data-lucide="check-circle" class="w-16 h-16 text-green-600"></i>';
+                        retakeBtn.style.display = 'none';
+                        continueBtn.style.display = 'inline-block';
+                    } else {
+                        resultHeader.textContent = 'Please try again';
+                        resultHeader.className = 'text-2xl font-bold mb-2 text-red-600';
+                        resultIcon.innerHTML = '<i data-lucide="x-circle" class="w-16 h-16 text-red-600"></i>';
+                        retakeBtn.style.display = 'inline-block';
+                        continueBtn.style.display = 'none';
+                    }
+                    
+                    // Re-initialize Lucide icons
+                    lucide.createIcons();
+                }
+
+                // Event listeners
+                if (startQuizBtn) {
+                    startQuizBtn.addEventListener('click', () => {
+                        currentQuestionIndex = 0;
+                        userAnswers = new Array(window.quizData.length);
+                        resultsView.style.display = 'none';
+                        quizView.style.display = 'block';
+                        quizModal.style.display = 'flex';
+                        showQuestion(currentQuestionIndex);
+                    });
+                }
+
+                if (quizNextBtn) {
+                    quizNextBtn.addEventListener('click', () => {
+                        if (userAnswers[currentQuestionIndex] === undefined) {
+                            alert('Please select an answer before continuing.');
+                            return;
+                        }
+                        
+                        if (currentQuestionIndex < window.quizData.length - 1) {
+                            currentQuestionIndex++;
+                            showQuestion(currentQuestionIndex);
+                        } else {
+                            showResults();
+                        }
+                    });
+                }
+
+                if (quizPrevBtn) {
+                    quizPrevBtn.addEventListener('click', () => {
+                        if (currentQuestionIndex > 0) {
+                            currentQuestionIndex--;
+                            showQuestion(currentQuestionIndex);
+                        }
+                    });
+                }
+
+                if (retakeBtn) {
+                    retakeBtn.addEventListener('click', () => {
+                        if (startQuizBtn) startQuizBtn.click();
+                    });
+                }
+
+                if (continueBtn) {
+                    continueBtn.addEventListener('click', () => {
+                        quizModal.style.display = 'none';
+                        confirmationSection.style.display = 'block';
+                        confirmationSection.scrollIntoView({ behavior: 'smooth' });
+                    });
+                }
+            }
         });
         
         function initializeSignaturePad() {
@@ -558,16 +852,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$has_confirmed) {
             setTimeout(resizeCanvas, 100);
             
             // Clear button
-            document.getElementById('clear-signature').addEventListener('click', function() {
-                if (document.querySelector('.signature-tab[data-tab="draw"]').classList.contains('active')) {
-                    signaturePad.clear();
-                } else {
-                    const textInput = document.getElementById('signature-text');
-                    const preview = document.getElementById('signature-preview');
-                    if (textInput) textInput.value = '';
-                    if (preview) preview.textContent = 'Your Name';
-                }
-            });
+            const clearBtn = document.getElementById('clear-signature');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    if (document.querySelector('.signature-tab[data-tab="draw"]').classList.contains('active')) {
+                        signaturePad.clear();
+                    } else {
+                        const textInput = document.getElementById('signature-text');
+                        const preview = document.getElementById('signature-preview');
+                        if (textInput) textInput.value = '';
+                        if (preview) preview.textContent = 'Your Name';
+                    }
+                });
+            }
         }
         
         function switchSignatureTab(tabType) {

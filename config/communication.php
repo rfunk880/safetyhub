@@ -33,10 +33,21 @@ define('COMM_EMAIL_FROM', 'safetyhub@swfic.net');
 define('COMM_EMAIL_FROM_NAME', 'Safety Hub - Communications');
 
 // Communication SMS/Twilio settings
-define('COMM_TWILIO_ACCOUNT_SID', 'AC5a1bd30f59b6b3c8facb7583d885e56a');
-define('COMM_TWILIO_AUTH_TOKEN', '4637b4a29c705e2784bc329edf95ebe9');
+define('TWILIO_ACCOUNT_SID', 'AC4806480262e2ad016e1f0a24332c62e9');
+define('TWILIO_AUTH_TOKEN', 'e801f9a8eae74d2aee7bd822628c399e');
 define('COMM_TWILIO_PHONE_NUMBER', '+18047350956');
 define('COMM_TWILIO_MESSAGING_SERVICE_SID', 'MGe20e6e071e8b46e0b42e305e221378ec');
+
+// --- TWILIO MAGIC NUMBERS FOR TESTING ---
+define('COMM_TWILIO_MAGIC_NUMBERS', [
+    '+15005550006', // Valid mobile number
+    '+15005550001', // Invalid mobile number (for error testing)
+    '+15005550007', // Valid mobile number (blacklisted)
+    '+15005550008', // Valid mobile number (unsubscribed)
+    '+15005550009'  // Valid mobile number (queue full)
+]);
+
+define('COMM_USE_MAGIC_NUMBERS', true); // Set to false in production
 
 // Communication module constants
 define('COMM_MAX_FILE_SIZE', 50 * 1024 * 1024); // 50MB
