@@ -74,7 +74,7 @@ if (!defined('SKIP_NAVIGATION') && isset($_SESSION['user_id'])) {
 
             <!-- User Management -->
             <?php if ($can_see_user_management): ?>
-            <a href="/users.php" class="flex items-center py-3 px-3 rounded-lg transition-colors mb-1 <?php echo isNavActive(['users.php', 'profile.php', 'view_profile.php', 'bulk_upload.php', 'change_password.php']) ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'; ?>">
+            <a href="/usermgmt/index.php" class="flex items-center py-3 px-3 rounded-lg transition-colors mb-1 <?php echo isNavActive(['usermgmt/', 'profile.php', 'view_profile.php', 'bulk_upload.php', 'change_password.php']) ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'; ?>">
                 <i data-lucide="users" class="w-5 h-5 mr-3"></i>
                 User Management
             </a>
@@ -155,7 +155,7 @@ if (!defined('SKIP_NAVIGATION') && isset($_SESSION['user_id'])) {
 
         <!-- User Info at Bottom -->
         <div class="absolute bottom-0 w-full border-t border-gray-700">
-            <a href="/profile.php" class="flex items-center p-4 hover:bg-gray-700 transition-colors group">
+            <a href="/usermgmt/profile.php" class="flex items-center p-4 hover:bg-gray-700 transition-colors group">
                 <?php if (!empty($loggedInUserProfilePicture) && file_exists("uploads/profile_pictures/" . $loggedInUserProfilePicture)): ?>
                     <img src="serve_image.php?file=<?php echo urlencode($loggedInUserProfilePicture); ?>" 
                          alt="Profile" 

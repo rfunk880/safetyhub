@@ -1,0 +1,12 @@
+[04-Jul-2025 05:09:16 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/../config/config.php' (include_path='.:/usr/local/php82/pear') in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/bulk_upload.php:6
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/bulk_upload.php on line 6
+[04-Jul-2025 05:13:28 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/../config/config.php' (include_path='.:/usr/local/php82/pear') in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/index.php:4
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/index.php on line 4
+[04-Jul-2025 05:13:30 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/../config/config.php' (include_path='.:/usr/local/php82/pear') in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/index.php:4
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/index.php on line 4

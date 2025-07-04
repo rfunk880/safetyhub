@@ -10,7 +10,7 @@ $error_message = '';
 if (isset($_SESSION['user_id'])) {
     $admin_roles = [1, 2, 3]; // Super Admin, Admin, Manager
     if (in_array($_SESSION['user_role_id'], $admin_roles)) {
-        header('Location: users.php');
+        header('Location: usermgmt/index.php');
     } else {
         header('Location: profile.php');
     }
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Check if the user's role is in the admin list.
             if (in_array($user['roleId'], $admin_roles)) {
                 // Redirect admins to the user management page.
-                header('Location: users.php');
+                header('Location: usermgmt/index.php');
             } else {
                 // Redirect all other users to their profile page.
                 header('Location: profile.php');
@@ -60,8 +60,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // If we reach here, login failed.
     $error_message = 'Invalid email or password.';
-    $conn->close();
 }
+
+$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -70,19 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Safety Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@0.378.0/dist/umd/lucide.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style> 
-        body { font-family: 'Inter', sans-serif; } 
-        .password-container { position: relative; }
-        .password-toggle {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #6b7280;
-        }
+    <style>
+        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center h-screen">
@@ -94,62 +85,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             
             <?php if ($error_message): ?>
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
-                <span><?php echo htmlspecialchars($error_message); ?></span>
-            </div>
+                <div class="px-4 py-3 rounded-lg relative mb-6 bg-red-100 border border-red-400 text-red-700">
+                    <strong class="font-bold">Error:</strong>
+                    <span class="block sm:inline"><?php echo htmlspecialchars($error_message); ?></span>
+                </div>
             <?php endif; ?>
-
-            <form action="login.php" method="POST">
+            
+            <form method="POST" action="">
                 <div class="mb-4">
                     <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email Address</label>
-                    <input type="email" name="email" id="email" class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <input type="email" name="email" id="email" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                           placeholder="Enter your email">
                 </div>
+                
                 <div class="mb-6">
                     <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password</label>
-                    <div class="password-container">
-                        <input type="password" name="password" id="password" class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                        <span id="passwordToggle" class="password-toggle">
-                            <i data-lucide="eye"></i>
-                        </span>
-                    </div>
+                    <input type="password" name="password" id="password" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                           placeholder="Enter your password">
                 </div>
-                <div class="flex items-center justify-between">
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline">
+                
+                <div class="flex items-center justify-between mb-6">
+                    <button type="submit" 
+                            class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-200">
                         Sign In
                     </button>
                 </div>
-                <div class="text-center mt-4">
-                    <a href="forgot_password.php" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
-                        Forgot Password?
-                    </a>
-                </div>
             </form>
+            
+            <div class="text-center">
+                <a href="forgot_password.php" class="text-blue-500 hover:text-blue-700 text-sm">
+                    Forgot your password?
+                </a>
+            </div>
         </div>
-        <p class="text-center text-gray-500 text-xs mt-4">&copy;<?php echo date("Y"); ?> SW Funk Industrial. All rights reserved.</p>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            lucide.createIcons();
-
-            const passwordToggle = document.getElementById('passwordToggle');
-            const passwordInput = document.getElementById('password');
-
-            passwordToggle.addEventListener('click', function() {
-                // Toggle the type attribute
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-
-                // Toggle the icon
-                const icon = this.querySelector('i');
-                if (type === 'password') {
-                    icon.setAttribute('data-lucide', 'eye');
-                } else {
-                    icon.setAttribute('data-lucide', 'eye-off');
-                }
-                lucide.createIcons();
-            });
-        });
-    </script>
 </body>
-</html>
+</html>

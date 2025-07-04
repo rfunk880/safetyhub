@@ -39,6 +39,13 @@ if ($conn->connect_error) {
 // Set the character set to prevent encoding issues
 $conn->set_charset("utf8mb4");
 
+// --- Include User Management Configuration ---
+require_once __DIR__ . '/usermgmt_config.php';
+
+// --- Application Constants ---
+define('APP_NAME', 'Safety Hub');
+define('APP_VERSION', '1.0.0');
+
 // --- Helper Functions ---
 
 /**
@@ -67,7 +74,8 @@ function sendSetupEmail($recipient_email, $token) {
         $mail->addReplyTo('no-reply@swfic.net', 'No Reply');
 
         // Email Content
-        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 
+                   "https" : "http";
         $host = $_SERVER['HTTP_HOST'];
         $path = dirname($_SERVER['PHP_SELF']);
         $reset_link = "{$protocol}://{$host}{$path}/reset_password.php?token={$token}";
@@ -92,76 +100,10 @@ function sendSetupEmail($recipient_email, $token) {
     }
 }
 
-/**
- * Get role name by role ID
- * @param int $roleId The role ID to look up
- * @param array $roles Array of roles from database
- * @return string Role name or 'N/A' if not found
- */
-function getRoleName($roleId, $roles) {
-    foreach ($roles as $role) {
-        if ($role['id'] == $roleId) {
-            return $role['name'];
-        }
-    }
-    return 'N/A';
-}
-
-/**
- * Check if a user is archived based on termination date
- * @param array $user User data array
- * @return bool True if user is archived, false otherwise
- */
-function isUserArchived($user) {
-    if (empty($user['terminationDate'])) {
-        return false;
-    }
-    try {
-        $termDate = new DateTime($user['terminationDate']);
-        $today = new DateTime('today');
-        return $termDate < $today;
-    } catch (Exception $e) {
-        return false;
-    }
-}
-
-/**
- * Deletes a user's profile picture from the filesystem
- * @param string $profilePictureFilename The filename of the profile picture
- * @return bool True if file was deleted or didn't exist, false on error
- */
-function deleteProfilePicture($profilePictureFilename) {
-    if (empty($profilePictureFilename)) {
-        return true; // No file to delete
-    }
-    
-    // Build full path to the file in uploads/profile_pictures/
-    $full_path = __DIR__ . '/../uploads/profile_pictures/' . $profilePictureFilename;
-    
-    if (file_exists($full_path)) {
-        return unlink($full_path);
-    }
-    
-    return true; // File doesn't exist, consider it "deleted"
-}
-
-/**
- * Get profile picture path helper function
- * @param string $filename Profile picture filename
- * @return string|null Full path if file exists, null otherwise
- */
-function getProfilePicturePath($filename) {
-    if (empty($filename)) {
-        return null;
-    }
-    
-    $full_path = __DIR__ . '/../uploads/profile_pictures/' . $filename;
-    return file_exists($full_path) ? $full_path : null;
-}
-
 // --- AUTOMATIC NAVIGATION LOADING ---
 // Load navigation for all web pages (not CLI scripts or API endpoints)
 if (isset($_SERVER['HTTP_HOST']) && !defined('SKIP_NAVIGATION')) {
     // Include navigation after database and session are ready
     require_once __DIR__ . '/../includes/navigation.php';
 }
+?>

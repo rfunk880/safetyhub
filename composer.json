@@ -1,0 +1,12 @@
+{
+    "name": "rfunk880/safetyhub",
+    "description": "Safety Management System and Learning Management System.",
+    "require": {
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}

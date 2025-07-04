@@ -1,1 +1,24 @@
-[01-Jul-2025 02:47:27 UTC] PHP Parse error:  syntax error, unexpected token "endforeach", expecting "elseif" or "else" or "endif" in /home/customer/www/safetyhub.swfunk.com/public_html/users.php on line 541
+[04-Jul-2025 05:38:17 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/customer/www/safetyhub.swfunk.com/public_html/../../config/config.php' (include_path='.:/usr/local/php82/pear') in /home/customer/www/safetyhub.swfunk.com/public_html/login.php:5
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/login.php on line 5
+[04-Jul-2025 05:38:28 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/customer/www/safetyhub.swfunk.com/public_html/../../config/config.php' (include_path='.:/usr/local/php82/pear') in /home/customer/www/safetyhub.swfunk.com/public_html/login.php:5
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/login.php on line 5
+[04-Jul-2025 05:41:11 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/customer/www/safetyhub.swfunk.com/public_html/../../config/config.php' (include_path='.:/usr/local/php82/pear') in /home/customer/www/safetyhub.swfunk.com/public_html/login.php:5
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/login.php on line 5
+[04-Jul-2025 05:41:13 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/customer/www/safetyhub.swfunk.com/public_html/../../config/config.php' (include_path='.:/usr/local/php82/pear') in /home/customer/www/safetyhub.swfunk.com/public_html/login.php:5
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/login.php on line 5
+[04-Jul-2025 05:41:14 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/customer/www/safetyhub.swfunk.com/public_html/../../config/config.php' (include_path='.:/usr/local/php82/pear') in /home/customer/www/safetyhub.swfunk.com/public_html/login.php:5
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/login.php on line 5
+[04-Jul-2025 05:42:03 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/customer/www/safetyhub.swfunk.com/public_html/../../config/config.php' (include_path='.:/usr/local/php82/pear') in /home/customer/www/safetyhub.swfunk.com/public_html/login.php:5
+Stack trace:
+#0 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/public_html/login.php on line 5
