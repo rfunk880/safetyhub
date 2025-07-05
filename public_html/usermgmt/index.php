@@ -141,20 +141,181 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    if ($post_action === 'archive_user' && $user_can_edit) {
-        $userId = (int)($_POST['userId'] ?? 0);
-        if ($userId > 0) {
-            $yesterday = date('Y-m-d', strtotime('-1 day'));
-            $stmt = $conn->prepare("UPDATE users SET terminationDate = ? WHERE id = ?");
-            $stmt->bind_param("si", $yesterday, $userId);
-            $stmt->execute();
-            $_SESSION['toastMessage'] = "User archived successfully.";
-            $stmt->close();
+if ($post_action === 'archive_user' && $user_can_edit) {
+    $userId = (int)($_POST['userId'] ?? 0);
+    if ($userId > 0) {
+        // First check if user is currently archived
+        $check_stmt = $conn->prepare("SELECT terminationDate FROM users WHERE id = ?");
+        $check_stmt->bind_param("i", $userId);
+        $check_stmt->execute();
+        $result = $check_stmt->get_result();
+        $user = $result->fetch_assoc();
+        $check_stmt->close();
+        
+        if ($user) {
+            $isCurrentlyArchived = !empty($user['terminationDate']) && $user['terminationDate'] < date('Y-m-d');
+            
+            if ($isCurrentlyArchived) {
+                // Unarchive: set terminationDate to NULL
+                $stmt = $conn->prepare("UPDATE users SET terminationDate = NULL WHERE id = ?");
+                $stmt->bind_param("i", $userId);
+                $stmt->execute();
+                $_SESSION['toastMessage'] = "User unarchived successfully.";
+                $stmt->close();
+            } else {
+                // Archive: set terminationDate to yesterday
+                $yesterday = date('Y-m-d', strtotime('-1 day'));
+                $stmt = $conn->prepare("UPDATE users SET terminationDate = ? WHERE id = ?");
+                $stmt->bind_param("si", $yesterday, $userId);
+                $stmt->execute();
+                $_SESSION['toastMessage'] = "User archived successfully.";
+                $stmt->close();
+            }
+        }
+    }
+}
+
+    // ADD THE NEW CODE HERE (between archive_user and header redirect):
+    
+    if ($post_action === 'multi_delete' && $user_is_super_admin) {
+        $userIds = $_POST['userIds'] ?? [];
+        if (!empty($userIds)) {
+            $sanitizedIds = array_map('intval', $userIds);
+            // Remove current user from deletion list
+            $sanitizedIds = array_diff($sanitizedIds, [$_SESSION['user_id']]);
+            
+            if (!empty($sanitizedIds)) {
+                $placeholders = implode(',', array_fill(0, count($sanitizedIds), '?'));
+                $types = str_repeat('i', count($sanitizedIds));
+                $stmt = $conn->prepare("DELETE FROM users WHERE id IN ($placeholders)");
+                $stmt->bind_param($types, ...$sanitizedIds);
+                
+                if ($stmt->execute()) {
+                    $_SESSION['toastMessage'] = "Successfully deleted {$stmt->affected_rows} user(s).";
+                } else {
+                    $_SESSION['toastMessage'] = "Error deleting users.";
+                }
+                $stmt->close();
+            } else {
+                $_SESSION['toastMessage'] = "No users were deleted (you cannot delete yourself).";
+            }
         }
     }
     
+if ($post_action === 'multi_archive' && $user_is_super_admin) {
+    $userIds = $_POST['userIds'] ?? [];
+    if (!empty($userIds)) {
+        $sanitizedIds = array_map('intval', $userIds);
+        // Remove current user from archive list
+        $sanitizedIds = array_diff($sanitizedIds, [$_SESSION['user_id']]);
+        
+        if (!empty($sanitizedIds)) {
+            $archived_count = 0;
+            $unarchived_count = 0;
+            
+            foreach ($sanitizedIds as $userId) {
+                // Check current status
+                $check_stmt = $conn->prepare("SELECT terminationDate FROM users WHERE id = ?");
+                $check_stmt->bind_param("i", $userId);
+                $check_stmt->execute();
+                $result = $check_stmt->get_result();
+                $user = $result->fetch_assoc();
+                $check_stmt->close();
+                
+                if ($user) {
+                    // Use the same logic as isUserArchived() function
+                    $isCurrentlyArchived = false;
+                    if (!empty($user['terminationDate'])) {
+                        try {
+                            $termDate = new DateTime($user['terminationDate']);
+                            $today = new DateTime('today');
+                            $isCurrentlyArchived = $termDate < $today;
+                        } catch (Exception $e) {
+                            $isCurrentlyArchived = false;
+                        }
+                    }
+                    
+                    if ($isCurrentlyArchived) {
+                        // User is archived, unarchive them
+                        $stmt = $conn->prepare("UPDATE users SET terminationDate = NULL WHERE id = ?");
+                        $stmt->bind_param("i", $userId);
+                        if ($stmt->execute()) {
+                            $unarchived_count++;
+                        }
+                        $stmt->close();
+                    } else {
+                        // User is active, archive them (use yesterday to ensure it's in the past)
+                        $yesterday = date('Y-m-d', strtotime('-1 day'));
+                        $stmt = $conn->prepare("UPDATE users SET terminationDate = ? WHERE id = ?");
+                        $stmt->bind_param("si", $yesterday, $userId);
+                        if ($stmt->execute()) {
+                            $archived_count++;
+                        }
+                        $stmt->close();
+                    }
+                }
+            }
+            
+            if ($archived_count > 0 && $unarchived_count > 0) {
+                $_SESSION['toastMessage'] = "Archived: {$archived_count}, Unarchived: {$unarchived_count} user(s).";
+            } elseif ($archived_count > 0) {
+                $_SESSION['toastMessage'] = "Successfully archived {$archived_count} user(s).";
+            } elseif ($unarchived_count > 0) {
+                $_SESSION['toastMessage'] = "Successfully unarchived {$unarchived_count} user(s).";
+            } else {
+                $_SESSION['toastMessage'] = "No users were modified.";
+            }
+        } else {
+            $_SESSION['toastMessage'] = "No users were modified (you cannot archive yourself).";
+        }
+    } else {
+        $_SESSION['toastMessage'] = "No users selected for archive operation.";
+    }
+}
+    
+    // END OF NEW CODE
+    
     header("Location: index.php");
     exit();
+}    
+
+// Edit_user handling
+if ($post_action === 'edit_user' && $user_can_edit) {
+    $userId = (int)($_POST['userId'] ?? 0);
+    $firstName = trim($_POST['firstName'] ?? '');
+    $lastName = trim($_POST['lastName'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $employeeId = trim($_POST['employeeId'] ?? '');
+    $roleId = (int)($_POST['roleId'] ?? 0);
+    $type = trim($_POST['type'] ?? '');
+    $title = trim($_POST['title'] ?? '');
+    $mobile_phone = trim($_POST['mobile_phone'] ?? '');
+    $alt_phone = trim($_POST['alt_phone'] ?? '');
+    $emergency_contact_name = trim($_POST['emergency_contact_name'] ?? '');
+    $emergency_contact_phone = trim($_POST['emergency_contact_phone'] ?? '');
+    
+    if ($userId > 0 && !empty($firstName) && !empty($lastName) && !empty($email) && $roleId > 0) {
+        // Check if email already exists for a different user
+        $check_stmt = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+        $check_stmt->bind_param("si", $email, $userId);
+        $check_stmt->execute();
+        if ($check_stmt->get_result()->num_rows > 0) {
+            $_SESSION['toastMessage'] = "Error: Email already exists for another user.";
+        } else {
+            $stmt = $conn->prepare("UPDATE users SET firstName = ?, lastName = ?, email = ?, employeeId = ?, roleId = ?, type = ?, title = ?, mobile_phone = ?, alt_phone = ?, emergency_contact_name = ?, emergency_contact_phone = ? WHERE id = ?");
+            $stmt->bind_param("ssssississsi", $firstName, $lastName, $email, $employeeId, $roleId, $type, $title, $mobile_phone, $alt_phone, $emergency_contact_name, $emergency_contact_phone, $userId);
+            
+            if ($stmt->execute()) {
+                $_SESSION['toastMessage'] = "User updated successfully.";
+            } else {
+                $_SESSION['toastMessage'] = "Error updating user: " . $stmt->error;
+            }
+            $stmt->close();
+        }
+        $check_stmt->close();
+    } else {
+        $_SESSION['toastMessage'] = "Error: All required fields must be filled.";
+    }
 }
 
 // Filtering and sorting logic
@@ -162,6 +323,14 @@ $filter_type = $_GET['filter'] ?? 'all';
 $sort_by = $_GET['sort'] ?? 'lastName';
 $sort_order = $_GET['order'] ?? 'ASC';
 $search_query = $_GET['search'] ?? '';
+$user_type_filter = $_GET['user_type'] ?? '';
+$role_filter = $_GET['role'] ?? '';
+
+// Pagination variables
+$per_page = (int)($_GET['per_page'] ?? 25); // Allow variable per page
+if (!in_array($per_page, [25, 50, 100])) $per_page = 25; // Validate per_page value
+$page = (int)($_GET['page'] ?? 1);
+if ($page < 1) $page = 1;
 
 // Build WHERE clause for filtering
 $where_conditions = [];
@@ -175,10 +344,22 @@ if ($filter_type === 'active') {
 }
 
 if (!empty($search_query)) {
-    $where_conditions[] = "(firstName LIKE ? OR lastName LIKE ? OR email LIKE ? OR employeeId LIKE ?)";
+    $where_conditions[] = "(firstName LIKE ? OR lastName LIKE ? OR email LIKE ? OR employeeId LIKE ? OR title LIKE ? OR alt_phone LIKE ?)";
     $search_param = '%' . $search_query . '%';
-    $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param]);
-    $param_types .= "ssss";
+    $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param, $search_param]);
+    $param_types .= "ssssss";
+}
+
+if (!empty($user_type_filter)) {
+    $where_conditions[] = "type = ?";
+    $params[] = $user_type_filter;
+    $param_types .= "s";
+}
+
+if (!empty($role_filter)) {
+    $where_conditions[] = "roleId = ?";
+    $params[] = (int)$role_filter;
+    $param_types .= "i";
 }
 
 $where_clause = !empty($where_conditions) ? "WHERE " . implode(" AND ", $where_conditions) : "";
@@ -191,8 +372,22 @@ if (!in_array($sort_by, $valid_sorts)) {
 
 $sort_order = ($sort_order === 'DESC') ? 'DESC' : 'ASC';
 
-// Get users
-$sql = "SELECT u.*, r.name as roleName FROM users u LEFT JOIN roles r ON u.roleId = r.id $where_clause ORDER BY $sort_by $sort_order";
+// Get total count for pagination
+$count_sql = "SELECT COUNT(*) as total FROM users u $where_clause";
+$count_stmt = $conn->prepare($count_sql);
+if (!empty($params)) {
+    $count_stmt->bind_param($param_types, ...$params);
+}
+$count_stmt->execute();
+$total_users = $count_stmt->get_result()->fetch_assoc()['total'];
+$count_stmt->close();
+
+// Calculate pagination
+$total_pages = ceil($total_users / $per_page);
+$offset = ($page - 1) * $per_page;
+
+// Get users with pagination
+$sql = "SELECT u.*, r.name as roleName FROM users u LEFT JOIN roles r ON u.roleId = r.id $where_clause ORDER BY $sort_by $sort_order LIMIT $per_page OFFSET $offset";
 $stmt = $conn->prepare($sql);
 
 if (!empty($params)) {
@@ -273,12 +468,12 @@ unset($_SESSION['toastMessage']);
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <!-- Search and Filter -->
                             <div class="flex flex-col md:flex-row gap-4">
-                                <form method="GET" class="flex gap-4">
+                                <form method="GET" class="flex gap-4 flex-wrap">
                                     <div class="relative">
                                         <input type="text" 
                                                name="search" 
                                                value="<?php echo htmlspecialchars($search_query); ?>" 
-                                               placeholder="Search users..." 
+                                               placeholder="Search name, email, title, mobile..." 
                                                class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                         <i data-lucide="search" class="w-5 h-5 text-gray-400 absolute left-3 top-2.5"></i>
                                     </div>
@@ -290,24 +485,66 @@ unset($_SESSION['toastMessage']);
                                         <option value="archived" <?php echo ($filter_type === 'archived') ? 'selected' : ''; ?>>Archived Only</option>
                                     </select>
                                     
-                                    <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm">
-                                        Filter
+                                    <!-- New User Type Filter -->
+                                    <select name="user_type" 
+                                            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">All User Types</option>
+                                        <option value="Employee" <?php echo ($user_type_filter === 'Employee') ? 'selected' : ''; ?>>Employee</option>
+                                        <option value="Subcontractor" <?php echo ($user_type_filter === 'Subcontractor') ? 'selected' : ''; ?>>Subcontractor</option>
+                                    </select>
+                                    
+                                    <!-- New Role Filter -->
+                                    <select name="role" 
+                                            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">All Roles</option>
+                                        <?php foreach ($roles as $role): ?>
+                                            <option value="<?php echo $role['id']; ?>" <?php echo ($role_filter == $role['id']) ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($role['name']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    
+                                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                        Apply Filters
                                     </button>
+                                    
+                                    <a href="index.php" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                                        Clear All
+                                    </a>
                                 </form>
                             </div>
                             
-                            <!-- Action Buttons -->
-                            <div class="flex flex-col md:flex-row gap-2">
-                                <button onclick="openModal('createUserModal')" 
-                                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
-                                    <i data-lucide="plus" class="w-4 h-4 mr-1"></i>Add User
-                                </button>
-                                
-                                <a href="bulk_upload.php" 
-                                   class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm text-center">
-                                    <i data-lucide="upload" class="w-4 h-4 mr-1"></i>Bulk Upload
-                                </a>
-                            </div>
+            <!-- Action Buttons -->
+            <div class="flex flex-col md:flex-row gap-2">
+                <!-- Add User Button - Available to Super Admins, Admins, and Managers -->
+                <?php if ($user_can_edit): ?>
+                    <button onclick="openModal('createUserModal')" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                        <i data-lucide="plus" class="w-4 h-4 mr-1"></i>Add User
+                    </button>
+                <?php endif; ?>
+    
+                <!-- Multi-Select Action Buttons - Only for Super Admins -->
+                <?php if ($user_is_super_admin): ?>
+                    <button id="multiDeleteBtn" onclick="deleteSelectedUsers()" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm hidden">
+                        <i data-lucide="trash-2" class="w-4 h-4 mr-1"></i>Multi-Delete
+                    </button>
+        
+                    <button id="multiArchiveBtn" onclick="toggleArchiveSelectedUsers()" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm hidden">
+                        <i data-lucide="archive" class="w-4 h-4 mr-1"></i>Multi-Archive/Unarchive
+                    </button>
+                <?php endif; ?>
+    
+                <!-- Bulk Upload Button - Only for Super Admins -->
+                <?php if ($user_is_super_admin): ?>
+                    <a href="bulk_upload.php" 
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm text-center">
+                        <i data-lucide="upload" class="w-4 h-4 mr-1"></i>Bulk Upload
+                    </a>
+                <?php endif; ?>
+            </div>
                         </div>
                     </div>
 
@@ -325,7 +562,7 @@ unset($_SESSION['toastMessage']);
                                             <i data-lucide="chevron-<?php echo ($sort_by === 'lastName' && $sort_order === 'ASC') ? 'up' : 'down'; ?>" class="sort-icon w-4 h-4"></i>
                                         </a>
                                     </th>
-                                    <th class="p-3 text-left">Email</th>
+                                    <th class="p-3 text-left">Email / Mobile</th>
                                     <th class="p-3 text-left">Title</th>
                                     <th class="p-3 text-left">Type</th>
                                     <th class="p-3 text-left">Role</th>
@@ -349,7 +586,24 @@ unset($_SESSION['toastMessage']);
                                             <td class="p-3">
                                                 <div class="font-medium text-gray-900"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></div>
                                             </td>
-                                            <td class="p-3 text-gray-700"><?php echo htmlspecialchars($user['email']); ?></td>
+                                            <td class="p-3">
+                                                <div class="text-gray-900"><?php echo htmlspecialchars($user['email']); ?></div>
+                                                <?php 
+                                                // Extract mobile phone from JSON data in alt_phone column
+                                                $mobile_phone = '';
+                                                if (!empty($user['alt_phone'])) {
+                                                    $phone_data = json_decode($user['alt_phone'], true);
+                                                    if (is_array($phone_data) && isset($phone_data['mobile'])) {
+                                                        $mobile_phone = $phone_data['mobile'];
+                                                    } else {
+                                                        // Handle legacy data (non-JSON) - treat as mobile phone
+                                                        $mobile_phone = $user['alt_phone'];
+                                                    }
+                                                }
+                                                if (!empty($mobile_phone)): ?>
+                                                    <div class="text-sm text-gray-500"><?php echo htmlspecialchars($mobile_phone); ?></div>
+                                                <?php endif; ?>
+                                            </td>
                                             <td class="p-3 text-gray-700"><?php echo htmlspecialchars($user['title'] ?: 'N/A'); ?></td>
                                             <td class="p-3 text-gray-700"><?php echo htmlspecialchars($user['type']); ?></td>
                                             <td class="p-3 text-gray-700"><?php echo getRoleName($user['roleId'], $roles); ?></td>
@@ -372,9 +626,10 @@ unset($_SESSION['toastMessage']);
                                                             class="text-purple-600 hover:text-purple-800 text-sm">
                                                         <i data-lucide="mail" class="w-4 h-4"></i>
                                                     </button>
-                                                    <button onclick="archiveUser(<?php echo $user['id']; ?>)" 
-                                                            class="text-red-600 hover:text-red-800 text-sm">
-                                                        <i data-lucide="archive" class="w-4 h-4"></i>
+                                                    <button onclick="archiveUser(<?php echo $user['id']; ?>, <?php echo isUserArchived($user) ? 'true' : 'false'; ?>)" 
+                                                            class="<?php echo isUserArchived($user) ? 'text-green-600 hover:text-green-800' : 'text-red-600 hover:text-red-800'; ?> text-sm"
+                                                            title="<?php echo isUserArchived($user) ? 'Unarchive User' : 'Archive User'; ?>">
+                                                        <i data-lucide="<?php echo isUserArchived($user) ? 'user-check' : 'archive'; ?>" class="w-4 h-4"></i>
                                                     </button>
                                                 </div>
                                             </td>
@@ -384,6 +639,81 @@ unset($_SESSION['toastMessage']);
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- ADD ENHANCED PAGINATION HERE -->
+                    <!-- Enhanced Pagination -->
+                    <div class="border-t border-gray-200 px-6 py-4">
+                        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <!-- Results info and per-page selector -->
+                            <div class="flex items-center gap-4 text-sm text-gray-700">
+                                <div>
+                                    Showing <?php echo ($offset + 1); ?> to <?php echo min($offset + $per_page, $total_users); ?> of <?php echo $total_users; ?> users
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <label for="perPageSelect" class="text-sm text-gray-600">Show:</label>
+                                    <select id="perPageSelect" onchange="changePerPage(this.value)" class="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500">
+                                        <option value="25" <?php echo ($per_page == 25) ? 'selected' : ''; ?>>25</option>
+                                        <option value="50" <?php echo ($per_page == 50) ? 'selected' : ''; ?>>50</option>
+                                        <option value="100" <?php echo ($per_page == 100) ? 'selected' : ''; ?>>100</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Page navigation -->
+                            <?php if ($total_pages > 1): ?>
+                                <div class="flex items-center gap-1">
+                                    <!-- Previous button -->
+                                    <?php if ($page > 1): ?>
+                                        <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page - 1])); ?>" 
+                                           class="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 flex items-center">
+                                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Page numbers -->
+                                    <?php
+                                    $start_page = max(1, $page - 2);
+                                    $end_page = min($total_pages, $page + 2);
+                                    
+                                    // Show first page if we're not showing it
+                                    if ($start_page > 1): ?>
+                                        <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => 1])); ?>" 
+                                           class="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">1</a>
+                                        <?php if ($start_page > 2): ?>
+                                            <span class="px-2 text-gray-500">...</span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Current page range -->
+                                    <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+                                        <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $i])); ?>" 
+                                           class="px-3 py-2 border <?php echo $i == $page ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 text-gray-700 hover:bg-gray-50'; ?> rounded-lg text-sm">
+                                            <?php echo $i; ?>
+                                        </a>
+                                    <?php endfor; ?>
+                                    
+                                    <!-- Show last page if we're not showing it -->
+                                    <?php if ($end_page < $total_pages): ?>
+                                        <?php if ($end_page < $total_pages - 1): ?>
+                                            <span class="px-2 text-gray-500">...</span>
+                                        <?php endif; ?>
+                                        <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $total_pages])); ?>" 
+                                           class="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"><?php echo $total_pages; ?></a>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Next button -->
+                                    <?php if ($page < $total_pages): ?>
+                                        <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page + 1])); ?>" 
+                                           class="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 flex items-center">
+                                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <!-- END OF ENHANCED PAGINATION -->
+                    
                 </div>
             </div>
         </main>
@@ -452,6 +782,92 @@ unset($_SESSION['toastMessage']);
         </form>
     </div>
 
+<!-- Edit User Modal -->
+    <div class="modal-backdrop" id="editUserModal-backdrop"></div>
+    <div class="modal bg-white rounded-lg shadow-lg w-full max-w-2xl p-6" id="editUserModal">
+        <h3 class="text-lg font-semibold mb-4">Edit User</h3>
+        <form method="POST" action="">
+            <input type="hidden" name="action" value="edit_user">
+            <input type="hidden" name="userId" id="editUserId">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                    <input type="text" name="firstName" id="editFirstName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                    <input type="text" name="lastName" id="editLastName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                    <input type="email" name="email" id="editEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+                    <input type="text" name="employeeId" id="editEmployeeId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+                    <select name="roleId" id="editRoleId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select Role</option>
+                        <?php foreach ($roles as $role): ?>
+                            <option value="<?php echo $role['id']; ?>"><?php echo htmlspecialchars($role['name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Employee Type</label>
+                    <select name="type" id="editType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select Type</option>
+                        <option value="Employee">Employee</option>
+                        <option value="Contractor">Contractor</option>
+                        <option value="Temp">Temp</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input type="text" name="title" id="editTitle" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mobile Phone</label>
+                    <input type="tel" name="mobile_phone" id="editMobilePhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Alt Phone</label>
+                    <input type="tel" name="alt_phone" id="editAltPhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact Name</label>
+                    <input type="text" name="emergency_contact_name" id="editEmergencyContactName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact Phone</label>
+                    <input type="tel" name="emergency_contact_phone" id="editEmergencyContactPhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeModal('editUserModal')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Update User
+                </button>
+            </div>
+        </form>
+    </div>
+
     <!-- Toast Notification -->
     <?php if ($toastMessage): ?>
         <div id="toast" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
@@ -508,10 +924,37 @@ unset($_SESSION['toastMessage']);
         });
 
         // User actions
-        function editUser(userId) {
-            // Implementation for edit user
-            console.log('Edit user:', userId);
-        }
+function editUser(userId) {
+    fetch('get_user_data.php?id=' + userId)
+        .then(response => response.json())
+        .then(user => {
+            if (user.error) {
+                alert('Error: ' + user.error);
+                return;
+            }
+            
+            // Populate edit modal with user data
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('editFirstName').value = user.firstName;
+            document.getElementById('editLastName').value = user.lastName;
+            document.getElementById('editEmail').value = user.email;
+            document.getElementById('editEmployeeId').value = user.employeeId || '';
+            document.getElementById('editTitle').value = user.title || '';
+            document.getElementById('editMobilePhone').value = user.mobile_phone || '';
+            document.getElementById('editAltPhone').value = user.alt_phone || '';
+            document.getElementById('editEmergencyContactName').value = user.emergency_contact_name || '';
+            document.getElementById('editEmergencyContactPhone').value = user.emergency_contact_phone || '';
+            document.getElementById('editRoleId').value = user.roleId;
+            document.getElementById('editType').value = user.type;
+            
+            // Open the edit modal
+            openModal('editUserModal');
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+            alert('Error loading user data');
+        });
+}
 
         function sendSetupEmail(userId) {
             if (confirm('Send setup email to this user?')) {
@@ -536,28 +979,136 @@ unset($_SESSION['toastMessage']);
             }
         }
 
-        function archiveUser(userId) {
-            if (confirm('Are you sure you want to archive this user?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '';
-                
-                const actionInput = document.createElement('input');
-                actionInput.type = 'hidden';
-                actionInput.name = 'action';
-                actionInput.value = 'archive_user';
-                
-                const userIdInput = document.createElement('input');
-                userIdInput.type = 'hidden';
-                userIdInput.name = 'userId';
-                userIdInput.value = userId;
-                
-                form.appendChild(actionInput);
-                form.appendChild(userIdInput);
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
+function archiveUser(userId, isCurrentlyArchived) {
+    const action = isCurrentlyArchived ? 'unarchive' : 'archive';
+    if (confirm(`Are you sure you want to ${action} this user?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '';
+        
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'archive_user';
+        
+        const userIdInput = document.createElement('input');
+        userIdInput.type = 'hidden';
+        userIdInput.name = 'userId';
+        userIdInput.value = userId;
+        
+        form.appendChild(actionInput);
+        form.appendChild(userIdInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
     </script>
+
+<script>
+// Per-page dropdown function
+function changePerPage(newPerPage) {
+    const url = new URL(window.location);
+    url.searchParams.set('per_page', newPerPage);
+    url.searchParams.set('page', '1'); // Reset to first page
+    window.location.href = url.toString();
+}
+
+// Multi-select functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    const multiDeleteBtn = document.getElementById('multiDeleteBtn');
+    const multiArchiveBtn = document.getElementById('multiArchiveBtn');
+    
+    // Handle "Select All" functionality
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            userCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            toggleMultiSelectButtons();
+        });
+    }
+    
+    // Handle individual checkbox changes
+    userCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateSelectAllState();
+            toggleMultiSelectButtons();
+        });
+    });
+    
+    function updateSelectAllState() {
+        if (!selectAllCheckbox) return;
+        
+        const checkedCount = document.querySelectorAll('.user-checkbox:checked').length;
+        const totalCount = userCheckboxes.length;
+        
+        selectAllCheckbox.checked = checkedCount === totalCount;
+        selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+    }
+    
+    function toggleMultiSelectButtons() {
+        const checkedCount = document.querySelectorAll('.user-checkbox:checked').length;
+        
+        if (multiDeleteBtn) {
+            multiDeleteBtn.classList.toggle('hidden', checkedCount === 0);
+        }
+        if (multiArchiveBtn) {
+            multiArchiveBtn.classList.toggle('hidden', checkedCount === 0);
+        }
+    }
+});
+
+function deleteSelectedUsers() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        alert('Please select users to delete.');
+        return;
+    }
+    
+    if (confirm(`Are you sure you want to delete ${selectedCheckboxes.length} selected user(s)? This action cannot be undone.`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = '<input type="hidden" name="action" value="multi_delete">';
+        
+        selectedCheckboxes.forEach(checkbox => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'userIds[]';
+            input.value = checkbox.value;
+            form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function toggleArchiveSelectedUsers() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        alert('Please select users to archive/unarchive.');
+        return;
+    }
+    
+    if (confirm(`Are you sure you want to toggle the archive status of ${selectedCheckboxes.length} selected user(s)?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = '<input type="hidden" name="action" value="multi_archive">';
+        
+        selectedCheckboxes.forEach(checkbox => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'userIds[]';
+            input.value = checkbox.value;
+            form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
 </body>
 </html>

@@ -38,15 +38,15 @@ define('USER_FIELD_LENGTHS', [
     'email' => 100,
     'employeeId' => 20,
     'title' => 100,
-    'mobile_phone' => 20,
-    'alt_phone' => 20,
+    'mobile_phone' => 12, // Updated to support ###-###-#### format
+    'alt_phone' => 12,    // Updated to support ###-###-#### format
     'emergency_contact_name' => 100,
-    'emergency_contact_phone' => 20
+    'emergency_contact_phone' => 12 // Updated to support ###-###-#### format
 ]);
 
 // --- Phone Number Format ---
-define('PHONE_NUMBER_PATTERN', '/^\+1[0-9]{10}$/'); // +18048889999 format
-define('PHONE_NUMBER_EXAMPLE', '+18048889999');
+define('PHONE_NUMBER_PATTERN', '/^[0-9]{3}-[0-9]{3}-[0-9]{4}$/'); // ###-###-#### format
+define('PHONE_NUMBER_EXAMPLE', '804-555-1234');
 
 // --- User Management Helper Functions ---
 
@@ -145,7 +145,7 @@ function getProfilePicturePath($filename) {
 }
 
 /**
- * Validate phone number format
+ * Validate phone number format (###-###-####)
  * @param string $phone Phone number to validate
  * @return bool True if valid format, false otherwise
  */
@@ -154,6 +154,43 @@ function validatePhoneNumber($phone) {
         return true; // Optional field
     }
     return preg_match(PHONE_NUMBER_PATTERN, $phone);
+}
+
+/**
+ * Format phone number to ###-###-#### format
+ * @param string $phone Raw phone number (digits only or with existing formatting)
+ * @return string Formatted phone number or empty string if invalid
+ */
+function formatPhoneNumber($phone) {
+    if (empty($phone)) {
+        return '';
+    }
+    
+    // Remove all non-digit characters
+    $digits = preg_replace('/[^0-9]/', '', $phone);
+    
+    // Must be exactly 10 digits
+    if (strlen($digits) !== 10) {
+        return '';
+    }
+    
+    // Format as ###-###-####
+    return substr($digits, 0, 3) . '-' . substr($digits, 3, 3) . '-' . substr($digits, 6, 4);
+}
+
+/**
+ * Clean phone number input (remove formatting, keep only digits)
+ * @param string $phone Phone number with any formatting
+ * @return string Digits only, limited to 10 characters
+ */
+function cleanPhoneNumber($phone) {
+    if (empty($phone)) {
+        return '';
+    }
+    
+    // Remove all non-digit characters and limit to 10 digits
+    $digits = preg_replace('/[^0-9]/', '', $phone);
+    return substr($digits, 0, 10);
 }
 
 /**
