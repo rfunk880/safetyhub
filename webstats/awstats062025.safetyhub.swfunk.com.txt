@@ -1,0 +1,277 @@
+AWSTATS DATA FILE 7.7 (build 20161204)
+# If you remove this file, all statistics for date 202506 will be lost/reset.
+# Last config file used to build this data file was /etc/awstats/awstats.safetyhub.swfunk.com.conf.
+
+# Position (offset in bytes) in this file for beginning of each section for
+# direct I/O access. If you made changes somewhere in this file, you should
+# also remove completely the MAP section (AWStats will rewrite it at next
+# update).
+BEGIN_MAP 28
+POS_GENERAL 2003                
+POS_TIME 2691                
+POS_VISITOR 6758                
+POS_DAY 7027                
+POS_DOMAIN 3326                
+POS_LOGIN 3569                
+POS_ROBOT 3724                
+POS_WORMS 3886                
+POS_EMAILSENDER 4017                
+POS_EMAILRECEIVER 4160                
+POS_SESSION 7186                
+POS_SIDER 7371                
+POS_FILETYPES 4295                
+POS_DOWNLOADS 4414                
+POS_OS 4462                
+POS_BROWSER 4551                
+POS_SCREENSIZE 4645                
+POS_UNKNOWNREFERER 4719                
+POS_UNKNOWNREFERERBROWSER 4806                
+POS_ORIGIN 4888                
+POS_SEREFERRALS 5024                
+POS_PAGEREFS 5168                
+POS_SEARCHWORDS 5316                
+POS_KEYWORDS 5468                
+POS_MISC 2355                
+POS_ERRORS 5527                
+POS_CLUSTER 3425                
+POS_SIDER_404 5661                
+END_MAP
+
+# LastLine    = Date of last record processed - Last record line number in last log - Last record offset in last log - Last record signature value
+# FirstTime   = Date of first visit for history file
+# LastTime    = Date of last visit for history file
+# LastUpdate  = Date of last update - Nb of parsed records - Nb of parsed old records - Nb of parsed new records - Nb of parsed corrupted - Nb of parsed dropped
+# TotalVisits = Number of visits
+# TotalUnique = Number of unique visitors
+# MonthHostsKnown   = Number of hosts known
+# MonthHostsUnKnown = Number of hosts unknown
+BEGIN_GENERAL 8
+LastLine 20250701004437 1475 442908 18491942072795
+FirstTime 20250627140939
+LastTime 20250630225312
+LastUpdate 20250701043105 1475 1418 46 0 10
+TotalVisits 18                  
+TotalUnique 5                   
+MonthHostsKnown 0                   
+MonthHostsUnknown 5                   
+END_GENERAL
+
+# Misc ID - Pages - Hits - Bandwidth
+BEGIN_MISC 10
+QuickTimeSupport 0 0 0
+RealPlayerSupport 0 0 0
+JavascriptDisabled 0 0 0
+TotalMisc 0 0 0
+JavaEnabled 0 0 0
+DirectorSupport 0 0 0
+WindowsMediaPlayerSupport 0 0 0
+FlashSupport 0 0 0
+AddToFavourites 0 1 0
+PDFSupport 0 0 0
+END_MISC
+
+# Hour - Pages - Hits - Bandwidth - Not viewed Pages - Not viewed Hits - Not viewed Bandwidth
+BEGIN_TIME 24
+0 1 1 5471 0 0 0
+1 72 72 247062 31 51 156129
+2 53 53 774445 12 12 58705
+3 100 101 2432842 79 94 151403
+4 51 52 683340 67 77 12412
+5 26 26 63983 526 538 13064
+6 0 0 0 0 0 0
+7 0 0 0 0 0 0
+8 0 0 0 0 0 0
+9 0 0 0 0 0 0
+10 0 0 0 0 0 0
+11 0 0 0 0 0 0
+12 0 0 0 1 1 0
+13 0 0 0 0 0 0
+14 1 1 23349 1 1 24
+15 1 1 1189 0 0 0
+16 35 35 126138 12 16 0
+17 12 12 31636 27 31 16380
+18 1 1 5544 0 0 0
+19 18 18 93014 33 33 0
+20 54 54 238031 48 54 11914
+21 24 24 78990 2 2 0
+22 29 29 149654 19 19 40092
+23 35 35 72759 16 20 70560
+END_TIME
+
+# Domain - Pages - Hits - Bandwidth
+# The 10 first Pages must be first (order not required for others)
+BEGIN_DOMAIN 2
+us 511 513 4980749
+ca 2 2 46698
+END_DOMAIN
+
+# Cluster ID - Pages - Hits - Bandwidth
+BEGIN_CLUSTER 0
+END_CLUSTER
+
+# Login - Pages - Hits - Bandwidth - Last visit
+# The 10 first Pages must be first (order not required for others)
+BEGIN_LOGIN 0
+END_LOGIN
+
+# Robot ID - Hits - Bandwidth - Last visit - Hits on robots.txt
+# The 10 first Hits must be first (order not required for others)
+BEGIN_ROBOT 1
+unknown 1 61 20250630032049 1
+END_ROBOT
+
+# Worm ID - Hits - Bandwidth - Last visit
+# The 5 first Hits must be first (order not required for others)
+BEGIN_WORMS 0
+END_WORMS
+
+# EMail - Hits - Bandwidth - Last visit
+# The 20 first Hits must be first (order not required for others)
+BEGIN_EMAILSENDER 0
+END_EMAILSENDER
+
+# EMail - Hits - Bandwidth - Last visit
+# The 20 first hits must be first (order not required for others)
+BEGIN_EMAILRECEIVER 0
+END_EMAILRECEIVER
+
+# Files type - Hits - Bandwidth - Bandwidth without compression - Bandwidth after compression
+BEGIN_FILETYPES 3
+jpg 2 1093433 0 0
+php 509 3882590 0 0
+html 4 51424 0 0
+END_FILETYPES
+
+# Downloads - Hits - Bandwidth
+BEGIN_DOWNLOADS 0
+END_DOWNLOADS
+
+# OS ID - Hits
+BEGIN_OS ID - Hits - Pages 2
+win10 514 512
+linux 1 1
+END_OS
+
+# Browser ID - Hits - Pages
+BEGIN_BROWSER 2
+chrome106.0.0.0 1 1
+chrome137.0.0.0 514 512
+END_BROWSER
+
+# Screen size - Hits
+BEGIN_SCREENSIZE 0
+END_SCREENSIZE
+
+# Unknown referer OS - Last visit date
+BEGIN_UNKNOWNREFERER 0
+END_UNKNOWNREFERER
+
+# Unknown referer Browser - Last visit date
+BEGIN_UNKNOWNREFERERBROWSER 0
+END_UNKNOWNREFERERBROWSER
+
+# Origin - Pages - Hits 
+BEGIN_ORIGIN 6
+From0 63 63
+From1 0 0
+From2 0 0
+From3 0 0
+From4 450 452
+From5 0 0
+END_ORIGIN
+
+# Search engine referers ID - Pages - Hits
+BEGIN_SEREFERRALS 0
+END_SEREFERRALS
+
+# External page referers - Pages - Hits
+# The 10 first Pages must be first (order not required for others)
+BEGIN_PAGEREFS 0
+END_PAGEREFS
+
+# Search keyphrases - Number of search
+# The 10 first number of search must be first (order not required for others)
+BEGIN_SEARCHWORDS 0
+END_SEARCHWORDS
+
+# Search keywords - Number of search
+# The 10 first number of search must be first (order not required for others)
+BEGIN_KEYWORDS 0
+END_KEYWORDS
+
+# Errors - Hits - Bandwidth
+BEGIN_ERRORS 5
+301 4 323
+404 65 423950
+403 16 106325
+500 133 0
+302 660 0
+END_ERRORS
+
+# URL with 404 errors - Hits - Last URL referrer
+BEGIN_SIDER_404 13
+/incidents/index.php 1 https://safetyhub.swfunk.com/users.php
+/audits/index.php 1 https://safetyhub.swfunk.com/communication/
+/risk/index.php 1 https://safetyhub.swfunk.com/users.php
+/serve_image.php 34 https://safetyhub.swfunk.com/users.php
+/training/index.php 1 https://safetyhub.swfunk.com/profile.php
+/documentation/index.php 5 https://safetyhub.swfunk.com/communication/index.php
+/communication/archived.php 1 https://safetyhub.swfunk.com/communication/history.php
+/courses/index.php 2 https://safetyhub.swfunk.com/users.php
+/dashboard.php 12 https://safetyhub.swfunk.com/users.php
+/download_template.php 1 https://safetyhub.swfunk.com/bulk_upload.php
+/system_config.php 1 https://safetyhub.swfunk.com/users.php
+/uploads/profile_pictures/user_5_1750909364.png 4 -
+/test_nav.php 1 -
+END_SIDER_404
+
+# Host - Pages - Hits - Bandwidth - Last visit date - [Start date of last visit] - [Last page of last visit]
+# [Start date of last visit] and [Last page of last visit] are saved only if session is not finished
+# The 10 first Hits must be first (order not required for others)
+BEGIN_VISITOR 5
+73.40.22.120 509 511 4978889 20250630225312
+142.93.148.10 1 1 23349 20250628012956
+205.169.39.25 1 1 23349 20250627140939
+162.39.56.165 1 1 930 20250629163810
+167.206.252.71 1 1 930 20250629162816
+END_VISITOR
+
+# Date - Pages - Hits - Bandwidth - Visits
+BEGIN_DAY 4
+20250627 18 18 29743 3
+20250628 229 231 1876600 5
+20250629 114 114 2472549 8
+20250630 152 152 648555 2
+END_DAY
+
+# Session range - Number of visits
+BEGIN_SESSION 5
+15mn-30mn 2
+1h+ 5
+30mn-1h 2
+0s-30s 8
+5mn-15mn 1
+END_SESSION
+
+# URL - Pages - Bandwidth - Entry - Exit
+# The 10 first Pages must be first (order not required for others)
+BEGIN_SIDER 18
+/users.php 263 1434492 10 8
+/profile.php 61 114112 0 0
+/login.php 49 51758 2 2
+/serve_image.php 38 2116838 0 0
+/bulk_upload.php 30 58778 0 2
+/view_profile.php 21 57298 0 0
+/communication/index.php 11 27080 0 0
+/test_integration.php 10 850 1 0
+/test_core.php 6 0 0 1
+/change_password.php 6 8582 0 0
+/test_nav.php 1 1611 0 1
+/download_template.php 5 1270 0 0
+//reset_password.php 3 2790 2 2
+/communication/ 2 4726 0 0
+/communication/history.php 1 2143 0 0
+/debug_navigation.php 2 3350 1 0
+/ 2 46698 2 2
+/forgot_password.php 2 1638 0 0
+END_SIDER

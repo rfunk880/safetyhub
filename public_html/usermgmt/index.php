@@ -273,50 +273,50 @@ if ($post_action === 'multi_archive' && $user_is_super_admin) {
     }
 }
     
+    // Edit_user handling
+    if ($post_action === 'edit_user' && $user_can_edit) {
+        $userId = (int)($_POST['userId'] ?? 0);
+        $firstName = trim($_POST['firstName'] ?? '');
+        $lastName = trim($_POST['lastName'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $employeeId = trim($_POST['employeeId'] ?? '');
+        $roleId = (int)($_POST['roleId'] ?? 0);
+        $type = trim($_POST['type'] ?? '');
+        $title = trim($_POST['title'] ?? '');
+        $mobile_phone_new = trim($_POST['mobile_phone'] ?? '');
+        $alt_phone = trim($_POST['alt_phone'] ?? '');
+        $emergency_contact_name = trim($_POST['emergency_contact_name'] ?? '');
+        $emergency_contact_phone = trim($_POST['emergency_contact_phone'] ?? '');
+        
+        if ($userId > 0 && !empty($firstName) && !empty($lastName) && !empty($email) && $roleId > 0) {
+            // Check if email already exists for a different user
+            $check_stmt = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+            $check_stmt->bind_param("si", $email, $userId);
+            $check_stmt->execute();
+            if ($check_stmt->get_result()->num_rows > 0) {
+                $_SESSION['toastMessage'] = "Error: Email already exists for another user.";
+            } else {
+                $stmt = $conn->prepare("UPDATE users SET firstName = ?, lastName = ?, email = ?, employeeId = ?, roleId = ?, type = ?, title = ?, mobile_phone_new = ?, alt_phone = ?, emergency_contact_name = ?, emergency_contact_phone = ? WHERE id = ?");
+                $stmt->bind_param("ssssississsi", $firstName, $lastName, $email, $employeeId, $roleId, $type, $title, $mobile_phone_new, $alt_phone, $emergency_contact_name, $emergency_contact_phone, $userId);
+                
+                if ($stmt->execute()) {
+                    $_SESSION['toastMessage'] = "User updated successfully.";
+                } else {
+                    $_SESSION['toastMessage'] = "Error updating user: " . $stmt->error;
+                }
+                $stmt->close();
+            }
+            $check_stmt->close();
+        } else {
+            $_SESSION['toastMessage'] = "Error: All required fields must be filled.";
+        }
+    }
+    
     // END OF NEW CODE
     
     header("Location: index.php");
     exit();
 }    
-
-// Edit_user handling
-if ($post_action === 'edit_user' && $user_can_edit) {
-    $userId = (int)($_POST['userId'] ?? 0);
-    $firstName = trim($_POST['firstName'] ?? '');
-    $lastName = trim($_POST['lastName'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $employeeId = trim($_POST['employeeId'] ?? '');
-    $roleId = (int)($_POST['roleId'] ?? 0);
-    $type = trim($_POST['type'] ?? '');
-    $title = trim($_POST['title'] ?? '');
-    $mobile_phone_new = trim($_POST['mobile_phone'] ?? '');
-    $alt_phone = trim($_POST['alt_phone'] ?? '');
-    $emergency_contact_name = trim($_POST['emergency_contact_name'] ?? '');
-    $emergency_contact_phone = trim($_POST['emergency_contact_phone'] ?? '');
-    
-    if ($userId > 0 && !empty($firstName) && !empty($lastName) && !empty($email) && $roleId > 0) {
-        // Check if email already exists for a different user
-        $check_stmt = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
-        $check_stmt->bind_param("si", $email, $userId);
-        $check_stmt->execute();
-        if ($check_stmt->get_result()->num_rows > 0) {
-            $_SESSION['toastMessage'] = "Error: Email already exists for another user.";
-        } else {
-            $stmt = $conn->prepare("UPDATE users SET firstName = ?, lastName = ?, email = ?, employeeId = ?, roleId = ?, type = ?, title = ?, mobile_phone_new = ?, alt_phone = ?, emergency_contact_name = ?, emergency_contact_phone = ? WHERE id = ?");
-            $stmt->bind_param("ssssississsi", $firstName, $lastName, $email, $employeeId, $roleId, $type, $title, $mobile_phone_new, $alt_phone, $emergency_contact_name, $emergency_contact_phone, $userId);
-            
-            if ($stmt->execute()) {
-                $_SESSION['toastMessage'] = "User updated successfully.";
-            } else {
-                $_SESSION['toastMessage'] = "Error updating user: " . $stmt->error;
-            }
-            $stmt->close();
-        }
-        $check_stmt->close();
-    } else {
-        $_SESSION['toastMessage'] = "Error: All required fields must be filled.";
-    }
-}
 
 // Filtering and sorting logic
 $filter_type = $_GET['filter'] ?? 'all';
@@ -589,11 +589,19 @@ unset($_SESSION['toastMessage']);
                                             <td class="p-3">
                                                 <div class="text-gray-900"><?php echo htmlspecialchars($user['email']); ?></div>
                                                 <?php 
-                                                // Use new mobile_phone_new field
+                                                // Use new mobile_phone_new field and format it for display
                                                 $mobile_phone = $user['mobile_phone_new'] ?? '';
-                                                if (!empty($mobile_phone)): ?>
-                                                    <div class="text-sm text-gray-500"><?php echo htmlspecialchars($mobile_phone); ?></div>
-                                                <?php endif; ?>
+                                                if (!empty($mobile_phone)) {
+                                                    // Format phone number for display (###-###-####)
+                                                    $digits = preg_replace('/[^0-9]/', '', $mobile_phone);
+                                                    if (strlen($digits) === 10) {
+                                                        $formatted_phone = substr($digits, 0, 3) . '-' . substr($digits, 3, 3) . '-' . substr($digits, 6, 4);
+                                                    } else {
+                                                        $formatted_phone = $mobile_phone; // Show as-is if not 10 digits
+                                                    }
+                                                ?>
+                                                    <div class="text-sm text-gray-500"><?php echo htmlspecialchars($formatted_phone); ?></div>
+                                                <?php } ?>
                                             </td>
                                             <td class="p-3 text-gray-700"><?php echo htmlspecialchars($user['title'] ?: 'N/A'); ?></td>
                                             <td class="p-3 text-gray-700"><?php echo htmlspecialchars($user['type']); ?></td>
@@ -760,6 +768,26 @@ unset($_SESSION['toastMessage']);
                     <label class="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
                     <input type="text" name="title" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mobile Phone</label>
+                    <input type="tel" name="mobile_phone" placeholder="123-456-7890" maxlength="12" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent phone-input" inputmode="numeric">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Alt Phone</label>
+                    <input type="tel" name="alt_phone" placeholder="123-456-7890" maxlength="12" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent phone-input" inputmode="numeric">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact Name</label>
+                    <input type="text" name="emergency_contact_name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact Phone</label>
+                    <input type="tel" name="emergency_contact_phone" placeholder="123-456-7890" maxlength="12" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent phone-input" inputmode="numeric">
+                </div>
             </div>
             
             <div class="flex justify-end space-x-3 mt-6">
@@ -829,12 +857,12 @@ unset($_SESSION['toastMessage']);
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Mobile Phone</label>
-                    <input type="tel" name="mobile_phone" id="editMobilePhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="tel" name="mobile_phone" id="editMobilePhone" placeholder="123-456-7890" maxlength="12" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent phone-input" inputmode="numeric">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Alt Phone</label>
-                    <input type="tel" name="alt_phone" id="editAltPhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="tel" name="alt_phone" id="editAltPhone" placeholder="123-456-7890" maxlength="12" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent phone-input" inputmode="numeric">
                 </div>
                 
                 <div>
@@ -844,7 +872,7 @@ unset($_SESSION['toastMessage']);
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact Phone</label>
-                    <input type="tel" name="emergency_contact_phone" id="editEmergencyContactPhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="tel" name="emergency_contact_phone" id="editEmergencyContactPhone" placeholder="123-456-7890" maxlength="12" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent phone-input" inputmode="numeric">
                 </div>
             </div>
             
@@ -881,6 +909,9 @@ unset($_SESSION['toastMessage']);
         function openModal(modalId) {
             document.getElementById(modalId).classList.add('active');
             document.getElementById(modalId + '-backdrop').classList.add('active');
+            setTimeout(() => {
+                setupPhoneFormatting();
+            }, 100);
         }
 
         function closeModal(modalId) {
@@ -931,7 +962,7 @@ function editUser(userId) {
             document.getElementById('editEmail').value = user.email;
             document.getElementById('editEmployeeId').value = user.employeeId || '';
             document.getElementById('editTitle').value = user.title || '';
-            document.getElementById('editMobilePhone').value = user.mobile_phone || '';
+            document.getElementById('editMobilePhone').value = user.mobile_phone_new || '';
             document.getElementById('editAltPhone').value = user.alt_phone || '';
             document.getElementById('editEmergencyContactName').value = user.emergency_contact_name || '';
             document.getElementById('editEmergencyContactPhone').value = user.emergency_contact_phone || '';
@@ -991,6 +1022,116 @@ function archiveUser(userId, isCurrentlyArchived) {
         form.appendChild(userIdInput);
         document.body.appendChild(form);
         form.submit();
+    }
+}
+</script>
+
+<script>
+    // Phone number formatting function
+    function formatPhoneNumber(value) {
+        // Remove all non-digit characters
+        const digits = value.replace(/\D/g, '');
+        
+        // Limit to 10 digits
+        const limitedDigits = digits.substring(0, 10);
+        
+        // Format as ###-###-####
+        if (limitedDigits.length >= 6) {
+            return limitedDigits.substring(0, 3) + '-' + limitedDigits.substring(3, 6) + '-' + limitedDigits.substring(6);
+        } else if (limitedDigits.length >= 3) {
+            return limitedDigits.substring(0, 3) + '-' + limitedDigits.substring(3);
+        } else {
+            return limitedDigits;
+        }
+    }
+
+    function handlePhoneInput(event) {
+        const input = event.target;
+        const formattedValue = formatPhoneNumber(input.value);
+        input.value = formattedValue;
+    }
+
+    function handlePhoneKeypress(event) {
+        // Allow: backspace, delete, tab, escape, enter
+        if ([8, 9, 27, 13, 46].indexOf(event.keyCode) !== -1 ||
+            // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (event.keyCode === 65 && event.ctrlKey === true) ||
+            (event.keyCode === 67 && event.ctrlKey === true) ||
+            (event.keyCode === 86 && event.ctrlKey === true) ||
+            (event.keyCode === 88 && event.ctrlKey === true)) {
+            return;
+        }
+        // Ensure that it is a number and stop the keypress
+        if ((event.shiftKey || (event.keyCode < 48 || event.keyCode > 57)) && (event.keyCode < 96 || event.keyCode > 105)) {
+            event.preventDefault();
+        }
+        
+        // Don't allow more than 10 digits
+        const digits = event.target.value.replace(/\D/g, '');
+        if (digits.length >= 10) {
+            event.preventDefault();
+        }
+    }
+
+    // Apply phone formatting to all phone inputs
+    function setupPhoneFormatting() {
+        const phoneInputs = document.querySelectorAll('.phone-input');
+        
+        phoneInputs.forEach(input => {
+            // Format existing values
+            if (input.value) {
+                input.value = formatPhoneNumber(input.value);
+            }
+            
+            // Remove existing listeners to prevent duplicates
+            input.removeEventListener('input', handlePhoneInput);
+            input.removeEventListener('keypress', handlePhoneKeypress);
+            
+            // Add event listeners
+            input.addEventListener('input', handlePhoneInput);
+            input.addEventListener('keypress', handlePhoneKeypress);
+        });
+    }
+
+    // Initialize phone formatting on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        setupPhoneFormatting();
+    });
+</script>
+<script>
+// Remove formatting before form submission
+function removePhoneFormatting() {
+    const phoneInputs = document.querySelectorAll('.phone-input');
+    phoneInputs.forEach(input => {
+        // Remove dashes before submission
+        input.value = input.value.replace(/\D/g, '');
+    });
+}
+
+// Add event listeners to forms to remove formatting before submission
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            // Create a copy of phone values without formatting for submission
+            const phoneInputs = this.querySelectorAll('.phone-input');
+            phoneInputs.forEach(input => {
+                // Store the formatted value for display
+                const formattedValue = input.value;
+                // Remove formatting for submission
+                input.value = input.value.replace(/\D/g, '');
+                
+                // After a brief delay, restore formatting for display
+                setTimeout(() => {
+                    input.value = formattedValue;
+                }, 100);
+            });
+        });
+    });
+});
+</script>
+</body>
+</html>();
     }
 }
     </script>
@@ -1096,8 +1237,8 @@ function toggleArchiveSelectedUsers() {
             form.appendChild(input);
         });
         
-        document.body.appendChild(form);
-        form.submit();
+            document.body.appendChild(form);
+            form.submit();
     }
 }
 </script>

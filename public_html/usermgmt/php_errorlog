@@ -1,5 +1,2 @@
-[04-Jul-2025 19:13:14 UTC] PHP Parse error:  syntax error, unexpected token "<" in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/index.php on line 398
-[04-Jul-2025 19:18:43 UTC] PHP Parse error:  syntax error, unexpected token "<" in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/index.php on line 398
-[04-Jul-2025 19:18:44 UTC] PHP Parse error:  syntax error, unexpected token "<" in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/index.php on line 398
-[04-Jul-2025 19:19:12 UTC] PHP Parse error:  syntax error, unexpected token "<" in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/index.php on line 398
-[04-Jul-2025 19:19:14 UTC] PHP Parse error:  syntax error, unexpected token "<" in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/index.php on line 398
+[06-Jul-2025 05:16:34 UTC] PHP Parse error:  syntax error, unexpected token "endif" in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/index.php on line 604
+[06-Jul-2025 05:20:41 UTC] PHP Parse error:  syntax error, unexpected token "endif" in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/index.php on line 604
