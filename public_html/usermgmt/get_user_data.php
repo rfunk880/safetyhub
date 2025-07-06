@@ -29,7 +29,7 @@ if ($userId <= 0) {
 }
 
 // Fetch user data
-$stmt = $conn->prepare("SELECT id, firstName, lastName, email, employeeId, roleId, title, mobile_phone, alt_phone, emergency_contact_name, emergency_contact_phone, type FROM users WHERE id = ?");
+$stmt = $conn->prepare("SELECT id, firstName, lastName, email, employeeId, roleId, title, mobile_phone_new, alt_phone, emergency_contact_name, emergency_contact_phone, type FROM users WHERE id = ?");
 $stmt->bind_param("i", $userId);
 $stmt->execute();
 $result = $stmt->get_result();

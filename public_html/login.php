@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: usermgmt/index.php');
             } else {
                 // Redirect all other users to their profile page.
-                header('Location: profile.php');
+                header('Location: usermgmt/profile.php');
             }
             exit();
         }

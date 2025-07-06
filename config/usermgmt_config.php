@@ -38,7 +38,7 @@ define('USER_FIELD_LENGTHS', [
     'email' => 100,
     'employeeId' => 20,
     'title' => 100,
-    'mobile_phone' => 12, // Updated to support ###-###-#### format
+    'mobile_phone_new' => 12, // Updated to support ###-###-#### format
     'alt_phone' => 12,    // Updated to support ###-###-#### format
     'emergency_contact_name' => 100,
     'emergency_contact_phone' => 12 // Updated to support ###-###-#### format

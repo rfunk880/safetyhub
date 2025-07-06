@@ -67,7 +67,7 @@ if (!defined('SKIP_NAVIGATION') && isset($_SESSION['user_id'])) {
         <!-- Navigation Menu -->
         <nav class="p-4">
             <!-- Dashboard -->
-            <a href="/dashboard.php" class="flex items-center py-3 px-3 rounded-lg transition-colors mb-1 <?php echo isNavActive('dashboard.php') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'; ?>">
+            <a href="/dashboard/index.php" class="flex items-center py-3 px-3 rounded-lg transition-colors mb-1 <?php echo isNavActive('dashboard.php') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'; ?>">
                 <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
                 Dashboard
             </a>

@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $roleId = (int)($_POST['roleId'] ?? 0);
         $type = trim($_POST['type'] ?? '');
         $title = trim($_POST['title'] ?? '');
-        $mobile_phone = trim($_POST['mobile_phone'] ?? '');
+        $mobile_phone_new = trim($_POST['mobile_phone'] ?? '');
         $alt_phone = trim($_POST['alt_phone'] ?? '');
         $emergency_contact_name = trim($_POST['emergency_contact_name'] ?? '');
         $emergency_contact_phone = trim($_POST['emergency_contact_phone'] ?? '');
@@ -103,8 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $password_hash = password_hash($password, PASSWORD_DEFAULT);
                 
-                $stmt = $conn->prepare("INSERT INTO users (firstName, lastName, email, password, employeeId, roleId, type, title, mobile_phone, alt_phone, emergency_contact_name, emergency_contact_phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("sssssissssss", $firstName, $lastName, $email, $password_hash, $employeeId, $roleId, $type, $title, $mobile_phone, $alt_phone, $emergency_contact_name, $emergency_contact_phone);
+                $stmt = $conn->prepare("INSERT INTO users (firstName, lastName, email, password, employeeId, roleId, type, title, mobile_phone_new, alt_phone, emergency_contact_name, emergency_contact_phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("sssssissssss", $firstName, $lastName, $email, $password_hash, $employeeId, $roleId, $type, $title, $mobile_phone_new, $alt_phone, $emergency_contact_name, $emergency_contact_phone);
                 
                 if ($stmt->execute()) {
                     $_SESSION['toastMessage'] = "User created successfully.";
@@ -289,7 +289,7 @@ if ($post_action === 'edit_user' && $user_can_edit) {
     $roleId = (int)($_POST['roleId'] ?? 0);
     $type = trim($_POST['type'] ?? '');
     $title = trim($_POST['title'] ?? '');
-    $mobile_phone = trim($_POST['mobile_phone'] ?? '');
+    $mobile_phone_new = trim($_POST['mobile_phone'] ?? '');
     $alt_phone = trim($_POST['alt_phone'] ?? '');
     $emergency_contact_name = trim($_POST['emergency_contact_name'] ?? '');
     $emergency_contact_phone = trim($_POST['emergency_contact_phone'] ?? '');
@@ -302,8 +302,8 @@ if ($post_action === 'edit_user' && $user_can_edit) {
         if ($check_stmt->get_result()->num_rows > 0) {
             $_SESSION['toastMessage'] = "Error: Email already exists for another user.";
         } else {
-            $stmt = $conn->prepare("UPDATE users SET firstName = ?, lastName = ?, email = ?, employeeId = ?, roleId = ?, type = ?, title = ?, mobile_phone = ?, alt_phone = ?, emergency_contact_name = ?, emergency_contact_phone = ? WHERE id = ?");
-            $stmt->bind_param("ssssississsi", $firstName, $lastName, $email, $employeeId, $roleId, $type, $title, $mobile_phone, $alt_phone, $emergency_contact_name, $emergency_contact_phone, $userId);
+            $stmt = $conn->prepare("UPDATE users SET firstName = ?, lastName = ?, email = ?, employeeId = ?, roleId = ?, type = ?, title = ?, mobile_phone_new = ?, alt_phone = ?, emergency_contact_name = ?, emergency_contact_phone = ? WHERE id = ?");
+            $stmt->bind_param("ssssississsi", $firstName, $lastName, $email, $employeeId, $roleId, $type, $title, $mobile_phone_new, $alt_phone, $emergency_contact_name, $emergency_contact_phone, $userId);
             
             if ($stmt->execute()) {
                 $_SESSION['toastMessage'] = "User updated successfully.";
@@ -344,7 +344,7 @@ if ($filter_type === 'active') {
 }
 
 if (!empty($search_query)) {
-    $where_conditions[] = "(firstName LIKE ? OR lastName LIKE ? OR email LIKE ? OR employeeId LIKE ? OR title LIKE ? OR alt_phone LIKE ?)";
+    $where_conditions[] = "(firstName LIKE ? OR lastName LIKE ? OR email LIKE ? OR employeeId LIKE ? OR title LIKE ? OR mobile_phone_new LIKE ?)";
     $search_param = '%' . $search_query . '%';
     $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param, $search_param, $search_param]);
     $param_types .= "ssssss";
@@ -589,17 +589,8 @@ unset($_SESSION['toastMessage']);
                                             <td class="p-3">
                                                 <div class="text-gray-900"><?php echo htmlspecialchars($user['email']); ?></div>
                                                 <?php 
-                                                // Extract mobile phone from JSON data in alt_phone column
-                                                $mobile_phone = '';
-                                                if (!empty($user['alt_phone'])) {
-                                                    $phone_data = json_decode($user['alt_phone'], true);
-                                                    if (is_array($phone_data) && isset($phone_data['mobile'])) {
-                                                        $mobile_phone = $phone_data['mobile'];
-                                                    } else {
-                                                        // Handle legacy data (non-JSON) - treat as mobile phone
-                                                        $mobile_phone = $user['alt_phone'];
-                                                    }
-                                                }
+                                                // Use new mobile_phone_new field
+                                                $mobile_phone = $user['mobile_phone_new'] ?? '';
                                                 if (!empty($mobile_phone)): ?>
                                                     <div class="text-sm text-gray-500"><?php echo htmlspecialchars($mobile_phone); ?></div>
                                                 <?php endif; ?>

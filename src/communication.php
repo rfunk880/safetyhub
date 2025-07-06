@@ -11,7 +11,7 @@
  */
 function getCommEmployees($conn) {
     $role_ids = implode(',', COMMUNICATION_EMPLOYEE_ROLES);
-    $sql = "SELECT id, firstName, lastName, email, mobile_phone as phone, 
+    $sql = "SELECT id, firstName, lastName, email, mobile_phone_new as phone, 
                    CONCAT(firstName, ' ', lastName) as name,
                    roleId
             FROM users 
@@ -814,7 +814,7 @@ function sendReminderNotification($distribution_id, $method, $conn) {
     $stmt = $conn->prepare("
         SELECT d.unique_link_token, 
                CONCAT(u.firstName, ' ', u.lastName) as employee_name,
-               u.email, u.mobile_phone as phone, 
+               u.email, u.mobile_phone_new as phone, 
                st.title as safety_talk_title 
         FROM distributions d 
         JOIN users u ON d.employee_id = u.id 

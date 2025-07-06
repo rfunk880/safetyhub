@@ -1,6 +1,7 @@
 <?php
 // /public_html/usermgmt/profile.php
 // User profile management with secure profile picture upload
+// Updated to use same layout and functions as view_profile.php
 
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/usermgmt_config.php';
@@ -70,7 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_picture'])) 
                     $feedback[] = 'Failed to update profile picture in database.';
                     $feedback_is_error = true;
                     // Clean up uploaded file
-                    unlink($full_path);
+                    if (file_exists($full_path)) {
+                        unlink($full_path);
+                    }
                 }
                 $stmt->close();
             } else {
@@ -84,44 +87,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_picture'])) 
     }
 }
 
-// Handle profile update
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
-    $mobile_phone = trim($_POST['mobile_phone'] ?? '');
-    $alt_phone = trim($_POST['alt_phone'] ?? '');
-    $emergency_contact_name = trim($_POST['emergency_contact_name'] ?? '');
-    $emergency_contact_phone = trim($_POST['emergency_contact_phone'] ?? '');
-    
-    // Validate phone numbers
-    $errors = [];
-    if ($mobile_phone && !validatePhoneNumber($mobile_phone)) {
-        $errors[] = 'Mobile phone format is invalid. Use format: ' . PHONE_NUMBER_EXAMPLE;
-    }
-    if ($alt_phone && !validatePhoneNumber($alt_phone)) {
-        $errors[] = 'Alternative phone format is invalid. Use format: ' . PHONE_NUMBER_EXAMPLE;
-    }
-    if ($emergency_contact_phone && !validatePhoneNumber($emergency_contact_phone)) {
-        $errors[] = 'Emergency contact phone format is invalid. Use format: ' . PHONE_NUMBER_EXAMPLE;
-    }
-    
-    if (empty($errors)) {
-        $stmt = $conn->prepare("UPDATE users SET mobile_phone = ?, alt_phone = ?, emergency_contact_name = ?, emergency_contact_phone = ? WHERE id = ?");
-        $stmt->bind_param("ssssi", $mobile_phone, $alt_phone, $emergency_contact_name, $emergency_contact_phone, $userId);
-        
-        if ($stmt->execute()) {
-            $feedback[] = 'Profile updated successfully!';
-        } else {
-            $feedback[] = 'Failed to update profile.';
-            $feedback_is_error = true;
-        }
-        $stmt->close();
-    } else {
-        $feedback = array_merge($feedback, $errors);
-        $feedback_is_error = true;
-    }
-}
-
 // Fetch user data
-$stmt = $conn->prepare("SELECT u.*, r.name as roleName FROM users u JOIN roles r ON u.roleId = r.id WHERE u.id = ?");
+$stmt = $conn->prepare("SELECT u.*, r.name as roleName FROM users u LEFT JOIN roles r ON u.roleId = r.id WHERE u.id = ?");
 $stmt->bind_param("i", $userId);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -129,13 +96,14 @@ $user = $result->fetch_assoc();
 $stmt->close();
 
 if (!$user) {
-    die("User not found.");
+    header("Location: ../login.php");
+    exit;
 }
 
 // Generate profile picture URL
 $profilePictureUrl = '';
 if (!empty($user['profilePicture'])) {
-    $profilePictureUrl = "../serve_image.php?file=" . urlencode($user['profilePicture']);
+    $profilePictureUrl = "serve_image.php?file=" . urlencode($user['profilePicture']);
 }
 ?>
 <!DOCTYPE html>
@@ -158,234 +126,208 @@ if (!empty($user['profilePicture'])) {
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen">
-        
-        <!-- Automatic Navigation -->
+        <!-- Sidebar -->
         <?php 
-        // Get navigation HTML
-        global $navigation_html;
-        echo $navigation_html; 
+        if (function_exists('renderNavigation')) {
+            renderNavigation();
+        } else {
+            // Fallback navigation if renderNavigation() doesn't exist
+            include __DIR__ . '/../../includes/navigation.php';
+        }
         ?>
-        
-        <!-- Main Content Area -->
-        <main class="flex-1 overflow-auto p-6">
-            <div class="max-w-4xl mx-auto">
-                
-                <!-- Header -->
-                <div class="mb-6">
-                    <h1 class="text-3xl font-bold text-gray-900">My Profile</h1>
-                    <p class="text-gray-600 mt-2">Manage your personal information and settings</p>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center">
+                    <button onclick="toggleSidebar()" class="md:hidden text-gray-600 hover:text-gray-900 mr-4">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                    <h2 class="text-2xl font-semibold text-gray-800">My Profile</h2>
                 </div>
-                
+                <a href="../dashboard/index.php" class="flex items-center text-blue-600 hover:text-blue-800 transition-colors">
+                    <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i>
+                    Back to Dashboard
+                </a>
+            </header>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto p-6">
                 <!-- Feedback Messages -->
                 <?php if (!empty($feedback)): ?>
-                    <div class="mb-6 p-4 rounded-lg <?php echo $feedback_is_error ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'; ?>">
-                        <?php foreach ($feedback as $message): ?>
-                            <div class="flex items-center">
-                                <i data-lucide="<?php echo $feedback_is_error ? 'alert-circle' : 'check-circle'; ?>" class="w-5 h-5 mr-2"></i>
-                                <?php echo htmlspecialchars($message); ?>
-                            </div>
+                    <div class="mb-6 p-4 rounded-lg <?php echo $feedback_is_error ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'; ?>">
+                        <?php foreach($feedback as $msg): ?>
+                            <p class="<?php echo $feedback_is_error ? 'text-red-700' : 'text-green-700'; ?>"><?php echo htmlspecialchars($msg); ?></p>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    
-                    <!-- Profile Information Section -->
-                    <div class="lg:col-span-2">
-                        <div class="bg-white rounded-lg shadow p-6">
-                            <h2 class="text-lg font-semibold text-gray-900 mb-6">Profile Information</h2>
-                            
-                            <!-- Read-only Information -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 p-4 bg-gray-50 rounded-lg">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">First Name</label>
-                                    <p class="text-gray-800 font-medium"><?php echo htmlspecialchars($user['firstName']); ?></p>
+
+                <!-- Profile Card -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden max-w-4xl mx-auto">
+                    <!-- Profile Content -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+                        
+                        <!-- Profile Picture and Basic Info -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-white rounded-lg shadow p-6 text-center">
+                                <div class="relative inline-block">
+                                    <?php if ($profilePictureUrl): ?>
+                                        <img src="<?php echo htmlspecialchars($profilePictureUrl); ?>" 
+                                             alt="Profile Picture" 
+                                             class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-white shadow-lg">
+                                    <?php else: ?>
+                                        <div class="w-32 h-32 rounded-full mx-auto mb-4 bg-gray-300 flex items-center justify-center">
+                                            <i data-lucide="user" class="w-16 h-16 text-gray-500"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Upload Profile Picture Button -->
+                                    <button onclick="showUploadModal()" 
+                                            class="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 shadow-lg transition-colors">
+                                        <i data-lucide="camera" class="w-4 h-4"></i>
+                                    </button>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">Last Name</label>
-                                    <p class="text-gray-800 font-medium"><?php echo htmlspecialchars($user['lastName']); ?></p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">Email Address</label>
-                                    <p class="text-gray-800"><?php echo htmlspecialchars($user['email']); ?></p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">Employee ID</label>
-                                    <p class="text-gray-800"><?php echo htmlspecialchars($user['employeeId'] ?: 'Not assigned'); ?></p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">Job Title</label>
-                                    <p class="text-gray-800"><?php echo htmlspecialchars($user['title'] ?: 'Not specified'); ?></p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">Role</label>
-                                    <p class="text-gray-800"><?php echo htmlspecialchars($user['roleName']); ?></p>
+                                
+                                <h2 class="text-xl font-semibold text-gray-900 mb-2">
+                                    <?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?>
+                                </h2>
+                                
+                                <p class="text-gray-600 mb-2"><?php echo htmlspecialchars($user['title'] ?: 'No title assigned'); ?></p>
+                                
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <?php echo isUserArchived($user) ? 'bg-gray-200 text-gray-800' : 'bg-green-100 text-green-800'; ?>">
+                                    <i data-lucide="<?php echo isUserArchived($user) ? 'user-x' : 'user-check'; ?>" class="w-4 h-4 mr-1"></i>
+                                    <?php echo isUserArchived($user) ? 'Archived' : 'Active'; ?>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Detailed Information -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-gray-50 rounded-lg p-6">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                        <p class="text-gray-900"><?php echo htmlspecialchars($user['email']); ?></p>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+                                        <p class="text-gray-900"><?php echo htmlspecialchars($user['employeeId'] ?: 'Not assigned'); ?></p>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Mobile Phone</label>
+                                        <p class="text-gray-900"><?php echo htmlspecialchars($user['mobile_phone'] ?: 'Not provided'); ?></p>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Alternative Phone</label>
+                                        <p class="text-gray-900"><?php echo htmlspecialchars($user['alt_phone'] ?: 'Not provided'); ?></p>
+                                    </div>
                                 </div>
                             </div>
                             
-                            <!-- Editable Contact Information -->
-                            <form method="POST" class="space-y-6">
-                                <input type="hidden" name="update_profile" value="1">
+                            <!-- Emergency Contact Information -->
+                            <div class="bg-gray-50 rounded-lg p-6 mt-6">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4">Emergency Contact</h3>
                                 
-                                <h3 class="text-md font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                                    Contact Information
-                                </h3>
-                                
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label for="mobile_phone" class="block text-sm font-medium text-gray-700 mb-2">
-                                            Mobile Phone
-                                        </label>
-                                        <input type="tel" 
-                                               id="mobile_phone" 
-                                               name="mobile_phone" 
-                                               value="<?php echo htmlspecialchars($user['mobile_phone'] ?? ''); ?>"
-                                               placeholder="<?php echo PHONE_NUMBER_EXAMPLE; ?>"
-                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                        <p class="text-xs text-gray-500 mt-1">Format: <?php echo PHONE_NUMBER_EXAMPLE; ?></p>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact Name</label>
+                                        <p class="text-gray-900"><?php echo htmlspecialchars($user['emergency_contact_name'] ?: 'Not provided'); ?></p>
                                     </div>
                                     
                                     <div>
-                                        <label for="alt_phone" class="block text-sm font-medium text-gray-700 mb-2">
-                                            Alternative Phone
-                                        </label>
-                                        <input type="tel" 
-                                               id="alt_phone" 
-                                               name="alt_phone" 
-                                               value="<?php echo htmlspecialchars($user['alt_phone'] ?? ''); ?>"
-                                               placeholder="<?php echo PHONE_NUMBER_EXAMPLE; ?>"
-                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact Phone</label>
+                                        <p class="text-gray-900"><?php echo htmlspecialchars($user['emergency_contact_phone'] ?: 'Not provided'); ?></p>
                                     </div>
                                 </div>
-                                
-                                <h3 class="text-md font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                                    Emergency Contact
-                                </h3>
-                                
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label for="emergency_contact_name" class="block text-sm font-medium text-gray-700 mb-2">
-                                            Emergency Contact Name
-                                        </label>
-                                        <input type="text" 
-                                               id="emergency_contact_name" 
-                                               name="emergency_contact_name" 
-                                               value="<?php echo htmlspecialchars($user['emergency_contact_name'] ?? ''); ?>"
-                                               placeholder="Full name of emergency contact"
-                                               maxlength="<?php echo USER_FIELD_LENGTHS['emergency_contact_name']; ?>"
-                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    </div>
-                                    
-                                    <div>
-                                        <label for="emergency_contact_phone" class="block text-sm font-medium text-gray-700 mb-2">
-                                            Emergency Contact Phone
-                                        </label>
-                                        <input type="tel" 
-                                               id="emergency_contact_phone" 
-                                               name="emergency_contact_phone" 
-                                               value="<?php echo htmlspecialchars($user['emergency_contact_phone'] ?? ''); ?>"
-                                               placeholder="<?php echo PHONE_NUMBER_EXAMPLE; ?>"
-                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    </div>
-                                </div>
-                                
-                                <div class="flex justify-end">
-                                    <button type="submit" 
-                                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                        <i data-lucide="save" class="w-4 h-4 inline mr-2"></i>
-                                        Update Profile
-                                    </button>
-                                </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
-                    
                 </div>
-                
             </div>
         </main>
+    </div>
+
+    <!-- Profile Picture Upload Modal -->
+    <div id="uploadModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Upload Profile Picture</h3>
+                <button onclick="hideUploadModal()" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                <div>
+                    <label for="profile_picture" class="block text-sm font-medium text-gray-700 mb-2">
+                        Choose Image (JPG, PNG, GIF - Max 2MB)
+                    </label>
+                    <input type="file" 
+                           id="profile_picture" 
+                           name="profile_picture" 
+                           accept="image/jpeg,image/png,image/gif" 
+                           required
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" 
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
+                        Upload
+                    </button>
+                    <button type="button" 
+                            onclick="hideUploadModal()" 
+                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
-        
-        // Phone number formatting
-        function formatPhoneNumber(input) {
-            // Remove all non-digits
-            let value = input.value.replace(/\D/g, '');
-            
-            // Add +1 prefix if not present and we have 10 digits
-            if (value.length === 10) {
-                value = '1' + value;
-            }
-            
-            // Add + prefix
-            if (value.length === 11 && value.startsWith('1')) {
-                value = '+' + value;
-            }
-            
-            input.value = value;
+
+        // Modal functions
+        function showUploadModal() {
+            document.getElementById('uploadModal').classList.remove('hidden');
         }
-        
-        // Add event listeners to phone inputs
-        document.querySelectorAll('input[type="tel"]').forEach(input => {
-            input.addEventListener('blur', () => formatPhoneNumber(input));
+
+        function hideUploadModal() {
+            document.getElementById('uploadModal').classList.add('hidden');
+        }
+
+        // Sidebar toggle for mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('hidden');
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('uploadModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideUploadModal();
+            }
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const menuButton = e.target.closest('[onclick="toggleSidebar()"]');
+            
+            if (sidebar && !sidebar.contains(e.target) && !menuButton && window.innerWidth < 768) {
+                sidebar.classList.add('hidden');
+            }
         });
     </script>
 </body>
-</html> Profile Picture Section -->
-                    <div class="lg:col-span-1">
-                        <div class="bg-white rounded-lg shadow p-6">
-                            <h2 class="text-lg font-semibold text-gray-900 mb-4">Profile Picture</h2>
-                            
-                            <div class="text-center">
-                                <?php if ($profilePictureUrl): ?>
-                                    <img src="<?php echo htmlspecialchars($profilePictureUrl); ?>" 
-                                         alt="Profile Picture" 
-                                         class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-white shadow-lg">
-                                <?php else: ?>
-                                    <div class="w-32 h-32 rounded-full mx-auto mb-4 bg-gray-300 flex items-center justify-center">
-                                        <i data-lucide="user" class="w-16 h-16 text-gray-500"></i>
-                                    </div>
-                                <?php endif; ?>
-                                
-                                <form method="POST" enctype="multipart/form-data" class="space-y-4">
-                                    <div>
-                                        <input type="file" 
-                                               name="profile_picture" 
-                                               accept="image/jpeg,image/png,image/gif" 
-                                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                                    </div>
-                                    <button type="submit" 
-                                            class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                        <i data-lucide="upload" class="w-4 h-4 inline mr-2"></i>
-                                        Upload Picture
-                                    </button>
-                                </form>
-                                
-                                <p class="text-xs text-gray-500 mt-2">
-                                    Max size: 2MB. Formats: JPG, PNG, GIF
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <!-- Account Actions -->
-                        <div class="bg-white rounded-lg shadow p-6 mt-6">
-                            <h2 class="text-lg font-semibold text-gray-900 mb-4">Account Actions</h2>
-                            <div class="space-y-3">
-                                <a href="change_password.php" 
-                                   class="flex items-center w-full px-4 py-2 text-left bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                                    <i data-lucide="key" class="w-4 h-4 mr-3"></i>
-                                    Change Password
-                                </a>
-                                <a href="../logout.php" 
-                                   class="flex items-center w-full px-4 py-2 text-left bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors">
-                                    <i data-lucide="log-out" class="w-4 h-4 mr-3"></i>
-                                    Sign Out
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!--
+</html>
