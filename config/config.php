@@ -73,12 +73,11 @@ function sendSetupEmail($recipient_email, $token) {
         $mail->addAddress($recipient_email);
         $mail->addReplyTo('no-reply@swfic.net', 'No Reply');
 
-        // Email Content
-        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 
-                   "https" : "http";
-        $host = $_SERVER['HTTP_HOST'];
-        $path = dirname($_SERVER['PHP_SELF']);
-        $reset_link = "{$protocol}://{$host}{$path}/reset_password.php?token={$token}";
+// Email Content - Fixed reset link to always point to correct location
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+$host = $_SERVER['HTTP_HOST'];
+// Always point to the root level reset_password.php file
+$reset_link = "{$protocol}://{$host}/reset_password.php?token={$token}";
         
         $mail->isHTML(true);
         $mail->Subject = 'Your Safety Hub Account: Action Required';

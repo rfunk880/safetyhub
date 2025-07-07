@@ -1,5 +1,17 @@
-[05-Jul-2025 04:53:16 UTC] PHP Fatal error:  Cannot redeclare getRoleName() (previously declared in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/index.php:95) in /home/customer/www/safetyhub.swfunk.com/config/usermgmt_config.php on line 59
-[05-Jul-2025 04:56:51 UTC] PHP Fatal error:  Cannot redeclare isUserArchived() (previously declared in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/index.php:76) in /home/customer/www/safetyhub.swfunk.com/config/usermgmt_config.php on line 73
-[05-Jul-2025 04:56:52 UTC] PHP Fatal error:  Cannot redeclare isUserArchived() (previously declared in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/index.php:76) in /home/customer/www/safetyhub.swfunk.com/config/usermgmt_config.php on line 73
-[05-Jul-2025 05:39:19 UTC] PHP Fatal error:  Cannot redeclare isUserArchived() (previously declared in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/view_profile.php:210) in /home/customer/www/safetyhub.swfunk.com/config/usermgmt_config.php on line 73
-[05-Jul-2025 05:39:21 UTC] PHP Fatal error:  Cannot redeclare isUserArchived() (previously declared in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/view_profile.php:210) in /home/customer/www/safetyhub.swfunk.com/config/usermgmt_config.php on line 73
+[07-Jul-2025 02:34:09 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Table 'dbdhrpfijmvzzj.documents' doesn't exist in /home/customer/www/safetyhub.swfunk.com/src/documentation.php:78
+Stack trace:
+#0 /home/customer/www/safetyhub.swfunk.com/src/documentation.php(78): mysqli->prepare('SELECT d.*, u.f...')
+#1 /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php(78): getDocuments(Object(mysqli), '', '', false, 16, 1, 12)
+#2 {main}
+  thrown in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 78
+[07-Jul-2025 03:12:15 UTC] PHP Warning:  ini_set(): Session ini settings cannot be changed after headers have already been sent in /home/customer/www/safetyhub.swfunk.com/config/config.php on line 19
+[07-Jul-2025 03:12:15 UTC] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in /home/customer/www/safetyhub.swfunk.com/config/config.php on line 23
+[07-Jul-2025 03:16:05 UTC] PHP Warning:  ini_set(): Session ini settings cannot be changed after headers have already been sent in /home/customer/www/safetyhub.swfunk.com/config/config.php on line 19
+[07-Jul-2025 03:16:05 UTC] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in /home/customer/www/safetyhub.swfunk.com/config/config.php on line 23
+[07-Jul-2025 03:29:18 UTC] PHP Warning:  ini_set(): Session ini settings cannot be changed after headers have already been sent in /home/customer/www/safetyhub.swfunk.com/config/config.php on line 19
+[07-Jul-2025 03:29:18 UTC] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in /home/customer/www/safetyhub.swfunk.com/config/config.php on line 23
+[07-Jul-2025 03:29:18 UTC] PHP Warning:  Undefined global variable $_SESSION in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/login-debug.php on line 32
+[07-Jul-2025 03:34:19 UTC] PHP Warning:  ini_set(): Session ini settings cannot be changed after headers have already been sent in /home/customer/www/safetyhub.swfunk.com/config/config.php on line 19
+[07-Jul-2025 03:34:19 UTC] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in /home/customer/www/safetyhub.swfunk.com/config/config.php on line 23
+[07-Jul-2025 03:34:19 UTC] PHP Warning:  Undefined global variable $_SESSION in /home/customer/www/safetyhub.swfunk.com/public_html/usermgmt/session-check.php on line 32
+[07-Jul-2025 03:38:53 UTC] PHP Warning:  session_regenerate_id(): Session ID cannot be regenerated after headers have already been sent in /home/customer/www/safetyhub.swfunk.com/src/auth.php on line 79

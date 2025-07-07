@@ -25,6 +25,9 @@ if (!defined('SKIP_NAVIGATION') && isset($_SESSION['user_id'])) {
     $admin_roles = [1, 2, 3]; // Super Admin, Admin, Manager
     $can_see_user_management = in_array($_SESSION['user_role_id'], $admin_roles);
 
+    // Documentation permissions - all users can view
+    $can_see_documentation = true; // All logged-in users can view documentation
+
     // Communication module permission - Direct role check (more reliable than function check)
     $can_see_communication = false;
     if (isset($_SESSION['user_role_id'])) {
@@ -88,13 +91,13 @@ if (!defined('SKIP_NAVIGATION') && isset($_SESSION['user_id'])) {
             </a>
             <?php endif; ?>
 
-            <!-- Safety Documentation -->
-            <?php if ($can_see_user_management): ?>
-            <a href="/documentation/index.php" class="flex items-center py-3 px-3 rounded-lg transition-colors mb-1 <?php echo isNavActive(['documentation/']) ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'; ?>">
-                <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
-                Documentation
-            </a>
-            <?php endif; ?>
+<!-- Safety Documentation -->
+<?php if ($can_see_documentation): ?>
+<a href="/documentation/index.php" class="flex items-center py-3 px-3 rounded-lg transition-colors mb-1 <?php echo isNavActive(['documentation/']) ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'; ?>">
+    <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
+    Documentation
+</a>
+<?php endif; ?>
 
             <!-- Safety Audits & Inspections -->
             <?php if ($can_see_user_management): ?>

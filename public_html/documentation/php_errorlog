@@ -1,0 +1,2 @@
+[07-Jul-2025 03:21:14 UTC] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/session-test.php on line 18
+[07-Jul-2025 03:21:14 UTC] PHP Warning:  Undefined global variable $_SESSION in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/session-test.php on line 24
