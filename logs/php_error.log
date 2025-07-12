@@ -1,3 +1,104 @@
-[12-Jul-2025 04:56:29 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
-[12-Jul-2025 04:56:29 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
-[12-Jul-2025 04:56:29 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 16:32:30 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[11-Jul-2025 16:32:30 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 16:32:30 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[11-Jul-2025 16:32:41 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 16:32:41 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 16:32:41 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 16:33:34 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[11-Jul-2025 16:33:34 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 16:33:34 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[11-Jul-2025 16:35:37 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[11-Jul-2025 16:35:37 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 16:35:37 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[11-Jul-2025 16:36:00 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 16:36:00 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 16:36:00 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 16:43:05 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[11-Jul-2025 16:43:05 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 16:43:05 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[11-Jul-2025 16:43:46 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 16:43:46 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 16:43:46 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 16:43:56 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114484
+[11-Jul-2025 16:43:56 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 16:43:56 UTC] File path from DB: 1752114484
+[11-Jul-2025 16:43:56 UTC] Trying with extension: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114484.pdf
+[11-Jul-2025 16:43:56 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752114484
+[11-Jul-2025 16:43:56 UTC] Trying alternative path with extension: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752114484.pdf
+[11-Jul-2025 16:43:56 UTC] File not found at any location. Checked: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114484, /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114484.pdf, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752114484, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752114484.pdf
+[11-Jul-2025 16:44:18 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[11-Jul-2025 16:44:18 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 16:44:18 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[11-Jul-2025 16:44:34 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 16:44:34 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 16:44:34 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 16:44:47 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[11-Jul-2025 16:44:47 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 16:44:47 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[11-Jul-2025 16:45:00 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 16:45:00 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 16:45:00 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 17:18:48 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114484
+[11-Jul-2025 17:18:48 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 17:18:48 UTC] File path from DB: 1752114484
+[11-Jul-2025 17:18:48 UTC] Trying with extension: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114484.pdf
+[11-Jul-2025 17:18:48 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752114484
+[11-Jul-2025 17:18:48 UTC] Trying alternative path with extension: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752114484.pdf
+[11-Jul-2025 17:18:48 UTC] File not found at any location. Checked: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114484, /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114484.pdf, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752114484, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752114484.pdf
+[11-Jul-2025 17:19:06 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 17:19:06 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 17:19:06 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 17:19:12 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 17:19:12 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 17:19:12 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 17:19:14 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 17:19:14 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 17:19:14 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 17:20:25 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 17:20:25 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 17:20:25 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 17:30:30 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 17:30:30 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 17:30:30 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 17:30:37 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[11-Jul-2025 17:30:37 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 17:30:37 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[11-Jul-2025 17:31:02 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 17:31:02 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 17:31:02 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 18:01:55 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[11-Jul-2025 18:01:55 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 18:01:55 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[11-Jul-2025 18:03:44 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 18:03:44 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 18:03:44 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 18:03:59 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 18:03:59 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 18:03:59 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 18:04:02 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 18:04:02 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 18:04:02 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 18:04:09 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[11-Jul-2025 18:04:09 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 18:04:09 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[11-Jul-2025 18:08:09 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 18:08:09 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 18:08:09 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 18:08:14 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 18:08:14 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 18:08:14 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 18:09:28 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[11-Jul-2025 18:09:28 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 18:09:28 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[11-Jul-2025 22:16:22 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 22:16:22 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 22:16:22 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 22:16:32 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 22:16:32 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 22:16:32 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[11-Jul-2025 22:16:39 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[11-Jul-2025 22:16:39 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 22:16:39 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[11-Jul-2025 22:17:00 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[11-Jul-2025 22:17:00 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[11-Jul-2025 22:17:00 UTC] File path from DB: 1752114711_686f261708e4a.pdf
