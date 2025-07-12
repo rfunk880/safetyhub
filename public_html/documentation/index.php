@@ -65,17 +65,18 @@ $favorites_only = isset($_GET['favorites']) && $_GET['favorites'] === '1';
 $page = max(1, intval($_GET['page'] ?? 1));
 $per_page = 12;
 
+// Get user info and admin status
+$user_name = $_SESSION['user_first_name'] . ' ' . $_SESSION['user_last_name'];
+$is_admin = hasDocAdminAccess();
+
 // Get documents and pagination info
-$documents = getDocuments($conn, $search, $tag, $favorites_only, $_SESSION['user_id'], $page, $per_page);
-$total_documents = getDocumentCount($conn, $search, $tag, $favorites_only, $_SESSION['user_id']);
+$include_archived = $is_admin && isset($_GET['include_archived']) && $_GET['include_archived'] === '1';
+$documents = getDocuments($conn, $search, $tag, $favorites_only, $_SESSION['user_id'], $page, $per_page, $include_archived);
+$total_documents = getDocumentCount($conn, $search, $tag, $favorites_only, $_SESSION['user_id'], $include_archived);
 $total_pages = ceil($total_documents / $per_page);
 
 // Get popular tags for tag cloud
 $popular_tags = getPopularTags($conn, 15);
-
-// Get user info
-$user_name = $_SESSION['user_first_name'] . ' ' . $_SESSION['user_last_name'];
-$is_admin = hasDocAdminAccess();
 
 // Get messages from URL
 $message = $_GET['message'] ?? '';
@@ -177,6 +178,17 @@ $error = $_GET['error'] ?? '';
                                         <span class="ml-2 text-sm text-gray-700">My Favorites</span>
                                     </label>
                                 </div>
+                                
+                                <!-- Archived Toggle (Admin Only) -->
+                                <?php if ($is_admin): ?>
+                                <div class="flex items-center">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" name="include_archived" value="1" <?php echo $include_archived ? 'checked' : ''; ?> 
+                                               class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                                        <span class="ml-2 text-sm text-gray-700">Include Archived</span>
+                                    </label>
+                                </div>
+                                <?php endif; ?>
                                 
                                 <!-- Search Button -->
                                 <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
@@ -282,11 +294,18 @@ $error = $_GET['error'] ?? '';
                         <!-- Documents Grid -->
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             <?php foreach ($documents as $doc): ?>
-                            <div class="document-card bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-all relative">
+                            <div class="document-card bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-all relative <?php echo $doc['archived_date'] ? 'opacity-75 border-red-200' : ''; ?>">
                                 <!-- Pinned Indicator -->
                                 <?php if ($doc['is_pinned']): ?>
                                 <div class="pinned-indicator absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center">
                                     <i data-lucide="pin" class="w-3 h-3 text-white"></i>
+                                </div>
+                                <?php endif; ?>
+                                
+                                <!-- Archived Indicator -->
+                                <?php if ($doc['archived_date']): ?>
+                                <div class="absolute top-2 left-2 px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">
+                                    Archived
                                 </div>
                                 <?php endif; ?>
                                 

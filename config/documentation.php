@@ -11,7 +11,7 @@ if (!defined('DOCUMENTATION_MODULE_ENABLED')) {
 }
 
 // Documentation module paths
-define('DOCUMENTATION_UPLOAD_DIR', __DIR__ . '/../uploads/safety_documents/');
+define('DOCUMENTATION_UPLOAD_DIR', realpath(__DIR__ . '/../uploads/safety_documents/') . '/');
 define('DOCUMENTATION_UPLOAD_URL', '/uploads/safety_documents/');
 
 // Ensure upload directory exists

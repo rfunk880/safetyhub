@@ -6,7 +6,7 @@
 /**
  * Get all documents with pagination and filtering
  */
-function getDocuments($conn, $search = '', $tag = '', $favorites_only = false, $user_id = null, $page = 1, $per_page = 20) {
+function getDocuments($conn, $search = '', $tag = '', $favorites_only = false, $user_id = null, $page = 1, $per_page = 20, $include_archived = false) {
     $offset = ($page - 1) * $per_page;
     $where_conditions = [];
     $params = [];
@@ -23,10 +23,15 @@ function getDocuments($conn, $search = '', $tag = '', $favorites_only = false, $
             LEFT JOIN users u ON d.uploaded_by = u.id
             LEFT JOIN document_favorites df ON d.id = df.document_id AND df.user_id = ?
             LEFT JOIN document_favorites df2 ON d.id = df2.document_id
-            WHERE d.archived_date IS NULL";
+            WHERE 1=1";
     
     $params[] = $user_id ?? $_SESSION['user_id'];
     $types .= 'i';
+    
+    // Archive filter
+    if (!$include_archived) {
+        $where_conditions[] = "d.archived_date IS NULL";
+    }
     
     // Add role-based visibility filter
     $user_role_id = $_SESSION['user_role_id'];
@@ -93,7 +98,7 @@ function getDocuments($conn, $search = '', $tag = '', $favorites_only = false, $
 /**
  * Get total document count for pagination
  */
-function getDocumentCount($conn, $search = '', $tag = '', $favorites_only = false, $user_id = null) {
+function getDocumentCount($conn, $search = '', $tag = '', $favorites_only = false, $user_id = null, $include_archived = false) {
     $where_conditions = [];
     $params = [];
     $types = '';
@@ -101,10 +106,15 @@ function getDocumentCount($conn, $search = '', $tag = '', $favorites_only = fals
     $sql = "SELECT COUNT(DISTINCT d.id) as total
             FROM documents d
             LEFT JOIN document_favorites df ON d.id = df.document_id AND df.user_id = ?
-            WHERE d.archived_date IS NULL";
+            WHERE 1=1";
     
     $params[] = $user_id ?? $_SESSION['user_id'];
     $types .= 'i';
+    
+    // Archive filter
+    if (!$include_archived) {
+        $where_conditions[] = "d.archived_date IS NULL";
+    }
     
     // Add role-based visibility filter
     $user_role_id = $_SESSION['user_role_id'];
@@ -237,12 +247,16 @@ function addDocument($title, $description, $tags, $access_type, $visibility, $da
  * Get document by ID
  */
 function getDocumentById($id, $conn) {
+    // Allow admins to view archived documents
+    $is_admin = hasDocAdminAccess();
+    $archived_condition = $is_admin ? "" : "AND d.archived_date IS NULL";
+    
     $stmt = $conn->prepare("
         SELECT d.*, u.firstName, u.lastName,
                CONCAT(u.firstName, ' ', u.lastName) as uploader_name
         FROM documents d
         LEFT JOIN users u ON d.uploaded_by = u.id
-        WHERE d.id = ? AND d.archived_date IS NULL
+        WHERE d.id = ? $archived_condition
     ");
     
     if (!$stmt) {
@@ -384,6 +398,23 @@ function archiveDocument($document_id, $conn) {
 }
 
 /**
+ * Unarchive document
+ */
+function unarchiveDocument($document_id, $conn) {
+    $stmt = $conn->prepare("UPDATE documents SET archived_date = NULL WHERE id = ?");
+    if (!$stmt) {
+        error_log("Unarchive Document SQL Error: " . $conn->error);
+        return false;
+    }
+    
+    $stmt->bind_param("i", $document_id);
+    $success = $stmt->execute();
+    $stmt->close();
+    
+    return $success;
+}
+
+/**
  * Get document addendums
  */
 function getDocumentAddendums($parent_id, $conn) {
@@ -410,8 +441,105 @@ function getDocumentAddendums($parent_id, $conn) {
 }
 
 /**
- * Add document addendum
+ * Get document revisions
  */
+function getDocumentRevisions($parent_id, $conn) {
+    $stmt = $conn->prepare("
+        SELECT d.*, u.firstName, u.lastName
+        FROM documents d
+        LEFT JOIN users u ON d.uploaded_by = u.id
+        WHERE d.parent_document_id = ? AND d.archived_date IS NULL AND d.is_revision = 1
+        ORDER BY d.upload_date ASC
+    ");
+    
+    if (!$stmt) {
+        error_log("Get Document Revisions SQL Error: " . $conn->error);
+        return [];
+    }
+    
+    $stmt->bind_param("i", $parent_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $revisions = $result->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+    
+    return $revisions;
+}
+
+/**
+ * Add document revision
+ */
+function addDocumentRevision($parent_id, $revision_name, $description, $tags, $access_type, $visibility, $date_modified, $file_info, $uploaded_by, $conn) {
+    $file_path = '';
+    $file_size = 0;
+    $original_filename = '';
+    
+    if (isset($file_info) && $file_info['error'] == UPLOAD_ERR_OK) {
+        // Validate file type
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_file($finfo, $file_info['tmp_name']);
+        finfo_close($finfo);
+        
+        if (!in_array($mime_type, DOC_ALLOWED_FILE_TYPES)) {
+            error_log("Security Alert: Revision upload with incorrect MIME type attempted. Name: {$file_info['name']}, Type: {$mime_type}");
+            return false;
+        }
+        
+        if ($file_info['size'] > DOC_MAX_FILE_SIZE) {
+            error_log("Revision file too large: {$file_info['name']}, Size: {$file_info['size']}");
+            return false;
+        }
+        
+        // Generate unique filename
+        $extension = strtolower(pathinfo($file_info['name'], PATHINFO_EXTENSION));
+        $filename = time() . '_rev_' . uniqid() . '.' . $extension;
+        $target_file = DOCUMENTATION_UPLOAD_DIR . $filename;
+        
+        if (move_uploaded_file($file_info['tmp_name'], $target_file)) {
+            $file_path = $filename;
+            $file_size = $file_info['size'];
+            $original_filename = $file_info['name'];
+        } else {
+            error_log("Failed to move uploaded revision file: {$file_info['name']}");
+            return false;
+        }
+    } else {
+        error_log("Revision upload error: " . $file_info['error']);
+        return false;
+    }
+    
+    // Convert tags array to comma-separated string
+    if (is_array($tags)) {
+        $tags = implode(',', $tags);
+    }
+    
+    $stmt = $conn->prepare("
+        INSERT INTO documents (title, description, tags, access_type, visibility, 
+                              file_path, file_size, original_filename, 
+                              date_modified, upload_date, uploaded_by, parent_document_id, is_revision, is_pinned)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, 1, 0)
+    ");
+    
+    if (!$stmt) {
+        error_log("Add Document Revision SQL Error: " . $conn->error);
+        return false;
+    }
+    
+    $stmt->bind_param("sssssiissii", 
+        $revision_name, $description, $tags, $access_type, $visibility,
+        $file_path, $file_size, $original_filename, $date_modified, $uploaded_by, $parent_id
+    );
+    
+    $success = $stmt->execute();
+    if (!$success) {
+        error_log("Add Document Revision Execute Error: " . $stmt->error);
+    }
+    
+    $revision_id = $conn->insert_id;
+    $stmt->close();
+    
+    return $success ? $revision_id : false;
+}
 function addDocumentAddendum($parent_id, $title, $description, $tags, $access_type, $visibility, $date_modified, $file_info, $uploaded_by, $conn) {
     $file_path = '';
     $file_size = 0;
