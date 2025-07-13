@@ -102,3 +102,232 @@
 [11-Jul-2025 22:17:00 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
 [11-Jul-2025 22:17:00 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
 [11-Jul-2025 22:17:00 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[13-Jul-2025 00:00:52 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[13-Jul-2025 00:00:52 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 00:00:52 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[13-Jul-2025 01:12:55 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[13-Jul-2025 01:12:55 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 01:12:55 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[13-Jul-2025 01:13:25 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[13-Jul-2025 01:13:25 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 01:13:25 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[13-Jul-2025 02:19:58 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114711_686f261708e4a.pdf
+[13-Jul-2025 02:19:58 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 02:19:58 UTC] File path from DB: 1752114711_686f261708e4a.pdf
+[13-Jul-2025 02:20:21 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[13-Jul-2025 02:20:21 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 02:20:21 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[13-Jul-2025 02:20:31 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[13-Jul-2025 02:20:31 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 02:20:31 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[13-Jul-2025 02:20:39 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752114269_686f245daa403.pdf
+[13-Jul-2025 02:20:39 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 02:20:39 UTC] File path from DB: 1752114269_686f245daa403.pdf
+[13-Jul-2025 02:39:21 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358
+[13-Jul-2025 02:39:21 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 02:39:21 UTC] File path from DB: 1752374358
+[13-Jul-2025 02:39:21 UTC] Trying with extension: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:39:21 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358
+[13-Jul-2025 02:39:21 UTC] Trying alternative path with extension: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:39:21 UTC] File not found at any location. Checked: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:39:23 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358
+[13-Jul-2025 02:39:23 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 02:39:23 UTC] File path from DB: 1752374358
+[13-Jul-2025 02:39:23 UTC] Trying with extension: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:39:23 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358
+[13-Jul-2025 02:39:23 UTC] Trying alternative path with extension: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:39:23 UTC] File not found at any location. Checked: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:39:27 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358
+[13-Jul-2025 02:39:27 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 02:39:27 UTC] File path from DB: 1752374358
+[13-Jul-2025 02:39:27 UTC] Trying with extension: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:39:27 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358
+[13-Jul-2025 02:39:27 UTC] Trying alternative path with extension: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:39:27 UTC] File not found at any location. Checked: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:39:33 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358
+[13-Jul-2025 02:39:33 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 02:39:33 UTC] File path from DB: 1752374358
+[13-Jul-2025 02:39:33 UTC] Trying with extension: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:39:33 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358
+[13-Jul-2025 02:39:33 UTC] Trying alternative path with extension: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:39:33 UTC] File not found at any location. Checked: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:40:56 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358
+[13-Jul-2025 02:40:56 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 02:40:56 UTC] File path from DB: 1752374358
+[13-Jul-2025 02:40:56 UTC] Trying with extension: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:40:56 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358
+[13-Jul-2025 02:40:56 UTC] Trying alternative path with extension: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:40:56 UTC] File not found at any location. Checked: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:40:58 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358
+[13-Jul-2025 02:40:58 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 02:40:58 UTC] File path from DB: 1752374358
+[13-Jul-2025 02:40:58 UTC] Trying with extension: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:40:58 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358
+[13-Jul-2025 02:40:58 UTC] Trying alternative path with extension: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:40:58 UTC] File not found at any location. Checked: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:41:02 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358
+[13-Jul-2025 02:41:02 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 02:41:02 UTC] File path from DB: 1752374358
+[13-Jul-2025 02:41:02 UTC] Trying with extension: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:41:02 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358
+[13-Jul-2025 02:41:02 UTC] Trying alternative path with extension: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:41:02 UTC] File not found at any location. Checked: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:41:08 UTC] Trying to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358
+[13-Jul-2025 02:41:08 UTC] Upload directory: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 02:41:08 UTC] File path from DB: 1752374358
+[13-Jul-2025 02:41:08 UTC] Trying with extension: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:41:08 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358
+[13-Jul-2025 02:41:08 UTC] Trying alternative path with extension: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 02:41:08 UTC] File not found at any location. Checked: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752374358.pdf, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358, /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752374358.pdf
+[13-Jul-2025 03:17:38 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:17:41 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:17:48 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:17:56 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:18:03 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:18:04 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:18:05 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:18:06 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:18:06 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:18:08 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:18:08 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:18:09 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:18:10 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:18:11 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:18:21 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:18:42 UTC] PHP Fatal error:  Cannot redeclare formatDocFileSize() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:147) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 731
+[13-Jul-2025 03:25:46 UTC] PHP Fatal error:  Cannot redeclare getDocFileIcon() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:124) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 732
+[13-Jul-2025 03:25:48 UTC] PHP Fatal error:  Cannot redeclare getDocFileIcon() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:124) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 732
+[13-Jul-2025 03:25:51 UTC] PHP Fatal error:  Cannot redeclare getDocFileIcon() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:124) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 732
+[13-Jul-2025 03:25:52 UTC] PHP Fatal error:  Cannot redeclare getDocFileIcon() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:124) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 732
+[13-Jul-2025 03:25:55 UTC] PHP Fatal error:  Cannot redeclare getDocFileIcon() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:124) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 732
+[13-Jul-2025 03:25:56 UTC] PHP Fatal error:  Cannot redeclare getDocFileIcon() (previously declared in /home/customer/www/safetyhub.swfunk.com/config/documentation.php:124) in /home/customer/www/safetyhub.swfunk.com/src/documentation.php on line 732
+[13-Jul-2025 03:27:02 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:27:30 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:27:51 UTC] Document deleted successfully: ID=5, File=Master Subcontract Agreement (FINAL).pdf
+[13-Jul-2025 03:27:51 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:28:00 UTC] Document deleted successfully: ID=4, File=Master Subcontract Agreement (FINAL).docx
+[13-Jul-2025 03:28:20 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:28:25 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:28:39 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:38:02 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:38:24 UTC] Document deleted successfully: ID=6, File=Ops Meeting 040824.pdf
+[13-Jul-2025 03:38:42 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:41:12 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:41:14 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:41:15 UTC] Attempting to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:15 UTC] DOCUMENTATION_UPLOAD_DIR: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 03:41:15 UTC] Document file_path: 1752377922
+[13-Jul-2025 03:41:15 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:15 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:15 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:16 UTC] Attempting to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:16 UTC] DOCUMENTATION_UPLOAD_DIR: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 03:41:16 UTC] Document file_path: 1752377922
+[13-Jul-2025 03:41:16 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:16 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:16 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:18 UTC] Attempting to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:18 UTC] DOCUMENTATION_UPLOAD_DIR: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 03:41:18 UTC] Document file_path: 1752377922
+[13-Jul-2025 03:41:18 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:18 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:18 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:21 UTC] Attempting to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:21 UTC] DOCUMENTATION_UPLOAD_DIR: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 03:41:21 UTC] Document file_path: 1752377922
+[13-Jul-2025 03:41:21 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:21 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:21 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:22 UTC] Attempting to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:22 UTC] DOCUMENTATION_UPLOAD_DIR: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 03:41:22 UTC] Document file_path: 1752377922
+[13-Jul-2025 03:41:22 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:22 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:22 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:24 UTC] Attempting to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:24 UTC] DOCUMENTATION_UPLOAD_DIR: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 03:41:24 UTC] Document file_path: 1752377922
+[13-Jul-2025 03:41:24 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:24 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:24 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922
+[13-Jul-2025 03:41:28 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:41:40 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:41:45 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:41:50 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:41:52 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:43:43 UTC] Attempting to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:43:43 UTC] DOCUMENTATION_UPLOAD_DIR: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 03:43:43 UTC] Document file_path: 1752377922
+[13-Jul-2025 03:43:43 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:43:43 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922
+[13-Jul-2025 03:43:43 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922
+[13-Jul-2025 03:43:44 UTC] Attempting to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:43:44 UTC] DOCUMENTATION_UPLOAD_DIR: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 03:43:44 UTC] Document file_path: 1752377922
+[13-Jul-2025 03:43:44 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:43:44 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922
+[13-Jul-2025 03:43:44 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922
+[13-Jul-2025 03:43:46 UTC] Attempting to serve file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:43:46 UTC] DOCUMENTATION_UPLOAD_DIR: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 03:43:46 UTC] Document file_path: 1752377922
+[13-Jul-2025 03:43:46 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:43:46 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922
+[13-Jul-2025 03:43:46 UTC] Trying alternative path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922
+[13-Jul-2025 03:49:04 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:49:07 UTC] Attempting to serve file: Ops Meeting 040824.pdf
+[13-Jul-2025 03:49:07 UTC] DOCUMENTATION_UPLOAD_DIR: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 03:49:07 UTC] Document file_path: 1752377922
+[13-Jul-2025 03:49:07 UTC] File extension: pdf
+[13-Jul-2025 03:49:07 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:49:07 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922.pdf
+[13-Jul-2025 03:49:07 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:49:07 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922.pdf
+[13-Jul-2025 03:49:07 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922
+[13-Jul-2025 03:49:07 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922.pdf
+[13-Jul-2025 03:49:07 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922
+[13-Jul-2025 03:49:07 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922.pdf
+[13-Jul-2025 03:49:07 UTC] Files in upload directory: 1752114269_686f245daa403.pdf, 1752114484_686f253444708.pdf, 1752114711_686f261708e4a.pdf, 1752331847_687276477d153.pdf, 1752332105_68727749226eb.pdf, 1752337893_68728de5d86ef.docx, 1752373797_68731a25b3521.docx, 1752374358_68731c5696fb2.pdf, 1752377300_687327d4ee1a2.pdf, 1752377922_68732a42d0c1a.pdf
+[13-Jul-2025 03:49:07 UTC] Found matching files: 1752377922_68732a42d0c1a.pdf
+[13-Jul-2025 03:49:07 UTC] Using matching file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922_68732a42d0c1a.pdf
+[13-Jul-2025 03:49:36 UTC] Attempting to serve file: Ops Meeting 040824.pdf
+[13-Jul-2025 03:49:36 UTC] DOCUMENTATION_UPLOAD_DIR: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 03:49:36 UTC] Document file_path: 1752377922
+[13-Jul-2025 03:49:36 UTC] File extension: pdf
+[13-Jul-2025 03:49:36 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:49:36 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922.pdf
+[13-Jul-2025 03:49:36 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:49:36 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922.pdf
+[13-Jul-2025 03:49:36 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922
+[13-Jul-2025 03:49:36 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922.pdf
+[13-Jul-2025 03:49:36 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922
+[13-Jul-2025 03:49:36 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922.pdf
+[13-Jul-2025 03:49:36 UTC] Files in upload directory: 1752114269_686f245daa403.pdf, 1752114484_686f253444708.pdf, 1752114711_686f261708e4a.pdf, 1752331847_687276477d153.pdf, 1752332105_68727749226eb.pdf, 1752337893_68728de5d86ef.docx, 1752373797_68731a25b3521.docx, 1752374358_68731c5696fb2.pdf, 1752377300_687327d4ee1a2.pdf, 1752377922_68732a42d0c1a.pdf
+[13-Jul-2025 03:49:36 UTC] Found matching files: 1752377922_68732a42d0c1a.pdf
+[13-Jul-2025 03:49:36 UTC] Using matching file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922_68732a42d0c1a.pdf
+[13-Jul-2025 03:50:36 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 03:50:38 UTC] Attempting to serve file: Ops Meeting 040824.pdf
+[13-Jul-2025 03:50:38 UTC] DOCUMENTATION_UPLOAD_DIR: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/
+[13-Jul-2025 03:50:38 UTC] Document file_path: 1752377922
+[13-Jul-2025 03:50:38 UTC] File extension: pdf
+[13-Jul-2025 03:50:38 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:50:38 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922.pdf
+[13-Jul-2025 03:50:38 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922
+[13-Jul-2025 03:50:38 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922.pdf
+[13-Jul-2025 03:50:38 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922
+[13-Jul-2025 03:50:38 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/public_html/documentation/../../uploads/safety_documents/1752377922.pdf
+[13-Jul-2025 03:50:38 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922
+[13-Jul-2025 03:50:38 UTC] Trying path: /home/customer/www/safetyhub.swfunk.com/public_html/uploads/safety_documents/1752377922.pdf
+[13-Jul-2025 03:50:38 UTC] Files in upload directory: 1752114269_686f245daa403.pdf, 1752114484_686f253444708.pdf, 1752114711_686f261708e4a.pdf, 1752331847_687276477d153.pdf, 1752332105_68727749226eb.pdf, 1752337893_68728de5d86ef.docx, 1752373797_68731a25b3521.docx, 1752374358_68731c5696fb2.pdf, 1752377300_687327d4ee1a2.pdf, 1752377922_68732a42d0c1a.pdf
+[13-Jul-2025 03:50:38 UTC] Found matching files: 1752377922_68732a42d0c1a.pdf
+[13-Jul-2025 03:50:38 UTC] Using matching file: /home/customer/www/safetyhub.swfunk.com/uploads/safety_documents/1752377922_68732a42d0c1a.pdf
+[13-Jul-2025 03:50:42 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 04:00:54 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 04:00:54 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 04:00:55 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 04:01:11 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 04:03:52 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 04:03:53 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 04:03:56 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 04:04:11 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 04:04:13 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358
+[13-Jul-2025 04:04:13 UTC] PHP Warning:  Undefined array key "is_favorite" in /home/customer/www/safetyhub.swfunk.com/public_html/documentation/index.php on line 358

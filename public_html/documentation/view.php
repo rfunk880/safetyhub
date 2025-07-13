@@ -1,7 +1,6 @@
 <?php
 // /public_html/documentation/view.php
-// Document Viewer Feature - View Individual Documents with Revisions
-// Enhanced with Production-Ready PDF.js Integration
+// Document Viewer with Custom PDF Renderer
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -23,9 +22,9 @@ if (!canViewDocumentation()) {
     exit;
 }
 
-// Get document ID
+// Get document ID from URL
 $document_id = intval($_GET['id'] ?? 0);
-if (!$document_id) {
+if ($document_id <= 0) {
     header('Location: /documentation/index.php?error=' . urlencode('Invalid document ID.'));
     exit;
 }
@@ -33,40 +32,96 @@ if (!$document_id) {
 // Get document details
 $document = getDocumentById($document_id, $conn);
 if (!$document) {
-    header('Location: /documentation/index.php?error=' . urlencode('Document not found.'));
+    header('Location: /documentation/index.php?error=' . urlencode('Document not found or you do not have permission to view it.'));
     exit;
 }
 
-// Allow admins to view archived documents, but redirect regular users
-if ($document['archived_date'] && !hasDocAdminAccess()) {
-    header('Location: /documentation/index.php?error=' . urlencode('Document not found.'));
-    exit;
-}
-
-// Check if user has permission to view this document based on visibility
-$user_role_id = $_SESSION['user_role_id'];
-$can_view = false;
-
-switch ($document['visibility']) {
-    case 'all':
-        $can_view = true;
-        break;
-    case 'employees_only':
-        $can_view = in_array($user_role_id, [1, 2, 3, 4, 5]); // All except subcontractors
-        break;
-    case 'supervisors_plus':
-        $can_view = in_array($user_role_id, [1, 2, 3, 4]); // Supervisors and above
-        break;
-    case 'managers_only':
-        $can_view = in_array($user_role_id, [1, 2, 3]); // Managers and above
-        break;
-    case 'admins_only':
-        $can_view = in_array($user_role_id, [1, 2]); // Admins only
-        break;
-}
-
-if (!$can_view) {
+// Check document visibility permissions
+if (!canUserViewDocument($document, $_SESSION['user_role_id'])) {
     header('Location: /documentation/index.php?error=' . urlencode('You do not have permission to view this document.'));
+    exit;
+}
+
+// Handle file serving
+if (isset($_GET['serve_file'])) {
+    $serve_document_id = intval($_GET['revision'] ?? $document_id);
+    $serve_document = getDocumentById($serve_document_id, $conn);
+    
+    if (!$serve_document) {
+        http_response_code(404);
+        echo "Document not found.";
+        exit;
+    }
+    
+    if (empty($serve_document['file_path'])) {
+        http_response_code(404);
+        echo "File path not found in document record.";
+        exit;
+    }
+    
+    // Get file extension from original filename
+    $file_extension = strtolower(pathinfo($serve_document['original_filename'], PATHINFO_EXTENSION));
+    
+    // Construct full file path - ensure proper path construction
+    $base_path = rtrim(DOCUMENTATION_UPLOAD_DIR, '/') . '/' . ltrim($serve_document['file_path'], '/');
+    
+    // Try different file path variations
+    $possible_paths = [
+        $base_path, // Original path as stored
+        $base_path . '.' . $file_extension, // Add extension if missing
+        DOCUMENTATION_UPLOAD_DIR . $serve_document['file_path'],
+        DOCUMENTATION_UPLOAD_DIR . $serve_document['file_path'] . '.' . $file_extension
+    ];
+    
+    $found_path = null;
+    foreach ($possible_paths as $path) {
+        if (file_exists($path)) {
+            $found_path = $path;
+            break;
+        }
+    }
+    
+    if (!$found_path) {
+        // Look for files that start with the same name
+        $upload_dir = DOCUMENTATION_UPLOAD_DIR;
+        if (is_dir($upload_dir)) {
+            $files_in_dir = scandir($upload_dir);
+            $actual_files = array_filter($files_in_dir, function($file) use ($upload_dir) {
+                return is_file($upload_dir . $file) && !in_array($file, ['.', '..']);
+            });
+            
+            // Look for files that start with the same name
+            $matching_files = array_filter($actual_files, function($file) use ($serve_document) {
+                return strpos($file, $serve_document['file_path']) === 0;
+            });
+            
+            if (!empty($matching_files)) {
+                $found_path = $upload_dir . reset($matching_files);
+            }
+        }
+    }
+    
+    if (!$found_path) {
+        http_response_code(404);
+        echo "File not found.";
+        exit;
+    }
+    
+    // Set headers for file serving
+    $file_size = filesize($found_path);
+    
+    header('Content-Length: ' . $file_size);
+    header('Content-Type: ' . getMimeType($file_extension));
+    header('Cache-Control: private, max-age=3600');
+    
+    // For PDF files in browser
+    if ($file_extension === 'pdf') {
+        header('Content-Disposition: inline; filename="' . $serve_document['original_filename'] . '"');
+    } else {
+        header('Content-Disposition: attachment; filename="' . $serve_document['original_filename'] . '"');
+    }
+    
+    readfile($found_path);
     exit;
 }
 
@@ -138,140 +193,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => $result,
-                'message' => $result ? 'Document unarchived successfully' : 'Failed to unarchive document'
+                'message' => $result ? 'Document unarchived successfully' : 'Failed to unarchive document',
+                'redirect' => $result ? '/documentation/index.php?message=' . urlencode('Document unarchived successfully.') : null
             ]);
             exit;
         }
         
-        if ($action === 'add_revision') {
-            $revision_name = trim($_POST['revision_name'] ?? '');
-            $description = trim($_POST['description'] ?? '');
-            $date_modified = $_POST['date_modified'] ?? date('Y-m-d');
-            $uploaded_by = $_SESSION['user_id'];
+        if ($action === 'delete' && $_SESSION['user_role_id'] == 1) { // Super Admin only
+            $result = deleteDocument($document_id, $conn);
             
-            if (empty($revision_name)) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => 'Revision name is required.']);
-                exit;
-            }
-            
-            if (!isset($_FILES['revision_file']) || $_FILES['revision_file']['error'] !== UPLOAD_ERR_OK) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => 'Please select a file for the revision.']);
-                exit;
-            }
-            
-            $file = $_FILES['revision_file'];
-            
-            // Validate file
-            if ($file['size'] > DOC_MAX_FILE_SIZE) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => 'File is too large. Maximum size is ' . formatDocFileSize(DOC_MAX_FILE_SIZE) . '.']);
-                exit;
-            }
-            
-            if (!isDocFileExtensionAllowed($file['name'])) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => 'File type not allowed.']);
-                exit;
-            }
-            
-            // Add revision
-            $revision_id = addDocumentRevision(
-                $document_id,
-                $revision_name,
-                $description,
-                $document['tags'], // Inherit tags from parent
-                $document['access_type'], // Inherit access type
-                $document['visibility'], // Inherit visibility
-                $date_modified,
-                $file,
-                $uploaded_by,
-                $conn
-            );
-            
-            if ($revision_id) {
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Revision added successfully!',
-                    'redirect' => 'view.php?id=' . $document_id . '&revision=' . $revision_id
-                ]);
-            } else {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => 'Failed to add revision.']);
-            }
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => $result,
+                'message' => $result ? 'Document deleted permanently' : 'Failed to delete document',
+                'redirect' => $result ? '/documentation/index.php?message=' . urlencode('Document deleted permanently.') : null
+            ]);
             exit;
         }
     }
-}
-
-// Handle file serving
-if (isset($_GET['serve_file'])) {
-    $serve_document_id = $current_revision_id;
-    $serve_document = getDocumentById($serve_document_id, $conn);
-    
-    if (!$serve_document) {
-        http_response_code(404);
-        exit('Document not found');
-    }
-    
-    $file_path = DOCUMENTATION_UPLOAD_DIR . $serve_document['file_path'];
-    
-    // Debug: Log file path for troubleshooting
-    error_log("Trying to serve file: " . $file_path);
-    error_log("Upload directory: " . DOCUMENTATION_UPLOAD_DIR);
-    error_log("File path from DB: " . $serve_document['file_path']);
-    
-    if (!file_exists($file_path)) {
-        // Try with file extension added
-        $extension = strtolower(pathinfo($serve_document['original_filename'], PATHINFO_EXTENSION));
-        $file_path_with_ext = $file_path . '.' . $extension;
-        error_log("Trying with extension: " . $file_path_with_ext);
-        
-        if (file_exists($file_path_with_ext)) {
-            $file_path = $file_path_with_ext;
-            error_log("Found file with extension!");
-        } else {
-            // Try alternative path - maybe file is in old location
-            $alt_file_path = __DIR__ . '/../../uploads/safety_documents/' . $serve_document['file_path'];
-            error_log("Trying alternative path: " . $alt_file_path);
-            
-            if (file_exists($alt_file_path)) {
-                $file_path = $alt_file_path;
-            } else {
-                // Try alternative path with extension
-                $alt_file_path_ext = $alt_file_path . '.' . $extension;
-                error_log("Trying alternative path with extension: " . $alt_file_path_ext);
-                
-                if (file_exists($alt_file_path_ext)) {
-                    $file_path = $alt_file_path_ext;
-                } else {
-                    http_response_code(404);
-                    error_log("File not found at any location. Checked: " . $file_path . ", " . $file_path_with_ext . ", " . $alt_file_path . ", " . $alt_file_path_ext);
-                    exit('File not found. Please contact administrator. Document ID: ' . $serve_document_id);
-                }
-            }
-        }
-    }
-    
-    // Set appropriate headers
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime_type = finfo_file($finfo, $file_path);
-    finfo_close($finfo);
-    
-    header('Content-Type: ' . $mime_type);
-    header('Content-Length: ' . filesize($file_path));
-    
-    // For PDF files, try to display inline
-    if ($mime_type === 'application/pdf') {
-        header('Content-Disposition: inline; filename="' . $serve_document['original_filename'] . '"');
-    } else {
-        header('Content-Disposition: attachment; filename="' . $serve_document['original_filename'] . '"');
-    }
-    
-    readfile($file_path);
-    exit;
 }
 
 // Check if user has favorited this document
@@ -308,6 +247,22 @@ if (!$user_has_admin_access) {
 
 // Split tags
 $document_tags = !empty($document['tags']) ? explode(',', $document['tags']) : [];
+
+// Helper function to get MIME type
+function getMimeType($extension) {
+    $mimeTypes = [
+        'pdf' => 'application/pdf',
+        'doc' => 'application/msword',
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls' => 'application/vnd.ms-excel',
+        'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'ppt' => 'application/vnd.ms-powerpoint',
+        'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'txt' => 'text/plain'
+    ];
+    
+    return $mimeTypes[$extension] ?? 'application/octet-stream';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -319,50 +274,8 @@ $document_tags = !empty($document['tags']) ? explode(',', $document['tags']) : [
     <script src="https://unpkg.com/lucide@0.378.0/dist/umd/lucide.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- PDF.js CDN with fallback and error handling -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" 
-            integrity="sha512-..." 
-            crossorigin="anonymous"
-            onerror="handlePDFJSLoadError()"></script>
-    
-    <script>
-        // PDF.js Error Handling and Fallback
-        function handlePDFJSLoadError() {
-            console.warn('Primary PDF.js CDN failed, loading backup...');
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js';
-            script.onerror = function() {
-                console.error('All PDF.js CDNs failed');
-                showPDFLoadError();
-            };
-            document.head.appendChild(script);
-        }
-        
-        function showPDFLoadError() {
-            const container = document.getElementById('pdf-viewer-container');
-            if (container) {
-                container.innerHTML = `
-                    <div class="p-8 text-center bg-red-50 border border-red-200 rounded-lg">
-                        <i data-lucide="alert-triangle" class="w-12 h-12 text-red-500 mx-auto mb-4"></i>
-                        <h3 class="text-lg font-medium text-red-900 mb-2">PDF Viewer Unavailable</h3>
-                        <p class="text-red-700 mb-4">Unable to load PDF viewer. This may be due to network restrictions.</p>
-                        <?php if ($can_download_for_user): ?>
-                        <a href="?id=<?php echo $document_id; ?>&revision=<?php echo $current_revision_id; ?>&serve_file=1" 
-                           class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                            <i data-lucide="download" class="w-4 h-4 mr-2"></i>
-                            Download PDF Instead
-                        </a>
-                        <?php else: ?>
-                        <p class="text-sm text-red-600">Please contact your administrator for assistance.</p>
-                        <?php endif; ?>
-                    </div>
-                `;
-                if (typeof lucide !== 'undefined') {
-                    lucide.createIcons();
-                }
-            }
-        }
-    </script>
+    <!-- PDF.js for Custom Renderer -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -371,23 +284,42 @@ $document_tags = !empty($document['tags']) ? explode(',', $document['tags']) : [
             .sidebar { transform: translateX(-100%); } 
             .sidebar.open { transform: translateX(0); } 
         }
-        .document-viewer {
-            min-height: 600px;
-            background: #f8f9fa;
+        
+        /* Custom PDF Viewer Styles */
+        .pdf-canvas {
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
-        .pinned-indicator {
-            background: linear-gradient(45deg, #f59e0b, #d97706);
+        
+        .pdf-canvas:active {
+            cursor: grabbing;
         }
-        .tag {
-            transition: all 0.2s ease;
+        
+        .pdf-controls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
         }
-        .tag:hover {
-            transform: scale(1.05);
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
         }
-        .pdf-viewer-container {
-            background: #ffffff;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Disable text selection and context menu for protected PDFs */
+        .pdf-protected {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
         }
     </style>
 </head>
@@ -396,131 +328,48 @@ $document_tags = !empty($document['tags']) ? explode(',', $document['tags']) : [
         
         <!-- Include Navigation -->
         <?php 
-        global $navigation_html;
-        echo $navigation_html; 
+        require_once __DIR__ . '/../../includes/navigation.php';
+        renderNavigation(); 
         ?>
         
         <!-- Main Content Area -->
         <main class="flex-1 overflow-auto">
-            <div class="p-6">
+            <div class="bg-white">
                 
-                <!-- Header -->
-                <div class="mb-6">
-                    <div class="flex items-start justify-between mb-4">
+                <!-- Document Header -->
+                <div class="border-b border-gray-200 px-6 py-4">
+                    <div class="flex items-center justify-between mb-4">
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center mb-2">
-                                <?php if ($document['is_pinned']): ?>
-                                <div class="pinned-indicator w-6 h-6 rounded-full flex items-center justify-center mr-3">
-                                    <i data-lucide="pin" class="w-3 h-3 text-white"></i>
-                                </div>
-                                <?php endif; ?>
-                                <h1 class="text-3xl font-bold text-gray-900 truncate"><?php echo htmlspecialchars($document['title']); ?></h1>
+                            <h1 class="text-2xl font-bold text-gray-900 truncate">
+                                <?php echo htmlspecialchars($document['title']); ?>
                                 <?php if ($document['archived_date']): ?>
-                                <span class="ml-3 px-2 py-1 text-sm bg-red-100 text-red-800 rounded-full">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
                                     Archived
                                 </span>
                                 <?php endif; ?>
-                                <?php if ($current_revision_id !== $document_id): ?>
-                                <span class="ml-3 px-2 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">
-                                    Revision: <?php echo htmlspecialchars($current_document['title']); ?>
-                                </span>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <!-- Revision Navigation -->
-                            <?php if (!empty($revisions) || $current_revision_id !== $document_id): ?>
-                            <div class="mb-3">
-                                <div class="flex items-center space-x-2">
-                                    <?php
-                                    // Find current position in revisions
-                                    $all_versions = array_merge([['id' => $document_id, 'title' => 'Original', 'upload_date' => $document['upload_date']]], $revisions);
-                                    usort($all_versions, function($a, $b) {
-                                        return strtotime($a['upload_date']) - strtotime($b['upload_date']);
-                                    });
-                                    
-                                    $current_index = 0;
-                                    foreach ($all_versions as $index => $version) {
-                                        if ($version['id'] == $current_revision_id) {
-                                            $current_index = $index;
-                                            break;
-                                        }
-                                    }
-                                    
-                                    $prev_version = $current_index > 0 ? $all_versions[$current_index - 1] : null;
-                                    $next_version = $current_index < count($all_versions) - 1 ? $all_versions[$current_index + 1] : null;
-                                    ?>
-                                    
-                                    <!-- Previous Version -->
-                                    <?php if ($prev_version): ?>
-                                    <a href="view.php?id=<?php echo $document_id; ?>&revision=<?php echo $prev_version['id']; ?>" 
-                                       class="flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
-                                        <i data-lucide="chevron-left" class="w-4 h-4 mr-1"></i>
-                                        Previous
-                                    </a>
-                                    <?php else: ?>
-                                    <span class="flex items-center px-3 py-1 bg-gray-50 text-gray-400 rounded cursor-not-allowed">
-                                        <i data-lucide="chevron-left" class="w-4 h-4 mr-1"></i>
-                                        Previous
-                                    </span>
-                                    <?php endif; ?>
-                                    
-                                    <!-- Version Selector -->
-                                    <select onchange="changeRevision(this.value)" 
-                                            class="px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <?php foreach ($all_versions as $version): ?>
-                                        <option value="<?php echo $version['id']; ?>" <?php echo $version['id'] == $current_revision_id ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($version['title']); ?>
-                                            (<?php echo date('M j, Y', strtotime($version['upload_date'])); ?>)
-                                        </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    
-                                    <!-- Next Version -->
-                                    <?php if ($next_version): ?>
-                                    <a href="view.php?id=<?php echo $document_id; ?>&revision=<?php echo $next_version['id']; ?>" 
-                                       class="flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
-                                        Next
-                                        <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
-                                    </a>
-                                    <?php else: ?>
-                                    <span class="flex items-center px-3 py-1 bg-gray-50 text-gray-400 rounded cursor-not-allowed">
-                                        Next
-                                        <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
-                                    </span>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                            <?php endif; ?>
-                            
-                            <?php if ($current_document['description']): ?>
-                            <p class="text-gray-600 mb-3"><?php echo htmlspecialchars($current_document['description']); ?></p>
-                            <?php endif; ?>
-                            
-                            <!-- Document Meta -->
-                            <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                                <div class="flex items-center">
-                                    <i data-lucide="calendar" class="w-4 h-4 mr-1"></i>
-                                    Modified: <?php echo date('M j, Y', strtotime($current_document['date_modified'])); ?>
-                                </div>
-                                <div class="flex items-center">
-                                    <i data-lucide="upload" class="w-4 h-4 mr-1"></i>
-                                    Uploaded: <?php echo date('M j, Y', strtotime($current_document['upload_date'])); ?>
-                                </div>
-                                <div class="flex items-center">
-                                    <i data-lucide="user" class="w-4 h-4 mr-1"></i>
-                                    By: <?php echo htmlspecialchars($current_document['uploader_name'] ?? 'Unknown'); ?>
-                                </div>
-                                <div class="flex items-center">
-                                    <i data-lucide="file" class="w-4 h-4 mr-1"></i>
-                                    <?php echo formatDocFileSize($current_document['file_size']); ?>
-                                </div>
+                            </h1>
+                            <div class="flex items-center text-sm text-gray-500 mt-1">
+                                <i data-lucide="calendar" class="w-4 h-4 mr-1"></i>
+                                <span class="mr-4">Modified: <?php echo date('M j, Y', strtotime($document['date_modified'])); ?></span>
+                                <i data-lucide="upload" class="w-4 h-4 mr-1"></i>
+                                <span class="mr-4">Uploaded: <?php echo date('M j, Y', strtotime($document['upload_date'])); ?></span>
+                                <i data-lucide="user" class="w-4 h-4 mr-1"></i>
+                                <span>By: <?php echo htmlspecialchars($document['uploader_name'] ?? 'Unknown'); ?></span>
+                                <i data-lucide="file" class="w-4 h-4 mr-1 ml-4"></i>
+                                <span><?php echo formatDocFileSize($document['file_size']); ?></span>
                             </div>
                         </div>
                         
-                        <!-- Action Buttons -->
-                        <div class="flex items-center space-x-3 ml-4">
+                        <div class="flex items-center space-x-3">
+                            <!-- Back Button -->
+                            <a href="/documentation/index.php" 
+                               class="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                                <span class="hidden sm:inline">Back</span>
+                            </a>
+                            
                             <!-- Favorite Button -->
-                            <button onclick="toggleFavorite()" id="favoriteBtn"
+                            <button onclick="toggleFavorite()" 
                                     class="flex items-center px-3 py-2 <?php echo $is_favorited ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'; ?> rounded-lg hover:bg-yellow-200 transition-colors">
                                 <i data-lucide="star" class="w-4 h-4 mr-2 <?php echo $is_favorited ? 'fill-current' : ''; ?>"></i>
                                 <span class="hidden sm:inline"><?php echo $is_favorited ? 'Favorited' : 'Add to Favorites'; ?></span>
@@ -579,190 +428,176 @@ $document_tags = !empty($document['tags']) ? explode(',', $document['tags']) : [
                                         Archive Document
                                     </button>
                                     <?php endif; ?>
+                                    
+                                    <!-- Delete option - Super Admin only -->
+                                    <?php if ($_SESSION['user_role_id'] == 1): ?>
+                                    <hr class="my-1">
+                                    <button onclick="deleteDocument()" class="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-100 flex items-center">
+                                        <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i>
+                                        Delete Document
+                                    </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <?php endif; ?>
-                            
-                            <!-- Back Button -->
-                            <a href="/documentation/index.php" 
-                               class="flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
-                                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
-                                <span class="hidden sm:inline">Back</span>
-                            </a>
                         </div>
                     </div>
                     
                     <!-- Tags -->
                     <?php if (!empty($document_tags)): ?>
                     <div class="flex flex-wrap gap-2 mb-4">
-                        <?php foreach ($document_tags as $tag): 
-                            $tag = trim($tag);
-                            if ($tag):
-                        ?>
-                        <a href="/documentation/index.php?tag=<?php echo urlencode($tag); ?>" 
-                           class="tag inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800 hover:bg-blue-200">
-                            <?php echo htmlspecialchars($tag); ?>
-                        </a>
-                        <?php 
-                            endif;
-                        endforeach; 
-                        ?>
+                        <?php foreach ($document_tags as $tag): ?>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <?php echo htmlspecialchars(trim($tag)); ?>
+                        </span>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <!-- Revision Selector -->
+                    <?php if (!empty($revisions)): ?>
+                    <div class="flex items-center text-sm text-gray-600">
+                        <label for="revision-select" class="mr-2">Viewing:</label>
+                        <select id="revision-select" onchange="changeRevision(this.value)" 
+                                class="border border-gray-300 rounded px-2 py-1 text-sm">
+                            <option value="<?php echo $document_id; ?>" <?php echo $current_revision_id === $document_id ? 'selected' : ''; ?>>
+                                Original Document
+                            </option>
+                            <?php foreach ($revisions as $revision): ?>
+                            <option value="<?php echo $revision['id']; ?>" <?php echo $current_revision_id === $revision['id'] ? 'selected' : ''; ?>>
+                                Revision <?php echo date('M j, Y', strtotime($revision['upload_date'])); ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <?php endif; ?>
                 </div>
-
-                <!-- Document Viewer -->
-                <div class="bg-white rounded-lg shadow mb-6">
-                    <div class="p-4 border-b border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <h2 class="text-lg font-semibold text-gray-900">Document Viewer</h2>
-                            <div class="flex items-center space-x-2 text-sm text-gray-600">
-                                <i data-lucide="<?php echo getDocFileIcon($current_document['original_filename']); ?>" class="w-4 h-4"></i>
-                                <span><?php echo htmlspecialchars($current_document['original_filename']); ?></span>
+                
+                <!-- Document Content -->
+                <div class="document-viewer">
+                    <?php if ($current_document['access_type'] === 'view_only' && !$is_pdf): ?>
+                    <!-- View Only - Non-PDF -->
+                    <div class="p-8 text-center">
+                        <i data-lucide="eye-off" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Preview Not Available</h3>
+                        <p class="text-gray-600 mb-4">This document is set to view-only mode and cannot be previewed online.</p>
+                        <p class="text-sm text-gray-500">File: <?php echo htmlspecialchars($current_document['original_filename']); ?></p>
+                    </div>
+                    
+                    <?php elseif ($is_pdf): ?>
+                    <!-- Custom PDF Renderer with Fallback -->
+                    <div class="w-full bg-gray-100">
+                        <div id="pdf-controls" class="pdf-controls flex items-center justify-between p-4 bg-white border-b border-gray-200 sticky top-0 z-10">
+                            <div class="flex items-center space-x-4">
+                                <button id="prev-page" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                                </button>
+                                <span id="page-info" class="text-sm text-gray-600 min-w-[100px] text-center">Page 1 of 1</span>
+                                <button id="next-page" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button id="zoom-out" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                                    <i data-lucide="zoom-out" class="w-4 h-4"></i>
+                                </button>
+                                <span id="zoom-level" class="text-sm text-gray-600 min-w-[60px] text-center">100%</span>
+                                <button id="zoom-in" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                                    <i data-lucide="zoom-in" class="w-4 h-4"></i>
+                                </button>
+                                <button id="fit-width" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 ml-2">
+                                    <i data-lucide="maximize" class="w-4 h-4"></i>
+                                </button>
+                                <button id="toggle-fullscreen" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 ml-2">
+                                    <i data-lucide="expand" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="pdf-container" class="p-4 overflow-auto <?php echo !$can_download_for_user ? 'pdf-protected' : ''; ?>" style="height: calc(100vh - 300px);">
+                            <div class="flex items-center justify-center h-full">
+                                <div class="text-center">
+                                    <div class="loading-spinner rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                                    <p class="text-gray-600">Loading PDF...</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="document-viewer">
-                        <?php if ($current_document['access_type'] === 'view_only' && $is_pdf): ?>
-                        <!-- View Only PDF - Custom Viewer to Prevent Download -->
-                        <div class="p-8 text-center">
-                            <div class="w-20 h-20 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                                <i data-lucide="file-text" class="w-10 h-10 text-blue-600"></i>
-                            </div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">View-Only PDF Document</h3>
-                            <p class="text-gray-600 mb-4">This document is restricted to view-only access.</p>
-                            <p class="text-sm text-gray-500 mb-6">
-                                File: <?php echo htmlspecialchars($current_document['original_filename']); ?> 
-                                (<?php echo formatDocFileSize($current_document['file_size']); ?>)
-                            </p>
-                            
-                            <!-- Custom PDF Viewer Button -->
-                            <button onclick="openRestrictedPDFViewer()" 
-                                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mb-4">
-                                <i data-lucide="eye" class="w-4 h-4 mr-2"></i>
-                                Open Secure Viewer
-                            </button>
-                            
-                            <div class="text-xs text-gray-500">
-                                <p>• Download and print functions are disabled</p>
-                                <p>• Document content is protected</p>
-                            </div>
+                    <?php else: ?>
+                    <!-- Other Document Types -->
+                    <div class="p-8 text-center">
+                        <div class="w-20 h-20 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                            <i data-lucide="<?php echo getDocFileIcon($current_document['original_filename']); ?>" class="w-10 h-10 text-blue-600"></i>
                         </div>
-                        
-                        <?php elseif ($current_document['access_type'] === 'view_only' && !$is_pdf): ?>
-                        <!-- View Only - Non-PDF -->
-                        <div class="p-8 text-center">
-                            <i data-lucide="eye-off" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">Preview Not Available</h3>
-                            <p class="text-gray-600 mb-4">This document is set to view-only mode and cannot be previewed online.</p>
-                            <p class="text-sm text-gray-500">File: <?php echo htmlspecialchars($current_document['original_filename']); ?></p>
-                        </div>
-                        
-                        <?php elseif ($is_pdf): ?>
-                        <!-- Enhanced PDF Viewer with PDF.js -->
-                        <div id="pdf-viewer-container" class="w-full">
-                            <!-- Loading State -->
-                            <div id="pdf-loading" class="flex items-center justify-center h-96 bg-gray-50">
-                                <div class="text-center">
-                                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                                    <p class="text-gray-600">Loading PDF viewer...</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <?php else: ?>
-                        <!-- Other Document Types -->
-                        <div class="p-8 text-center">
-                            <div class="w-20 h-20 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                                <i data-lucide="<?php echo getDocFileIcon($current_document['original_filename']); ?>" class="w-10 h-10 text-blue-600"></i>
-                            </div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2"><?php echo htmlspecialchars($current_document['title']); ?></h3>
-                            <p class="text-gray-600 mb-4">
-                                <?php echo htmlspecialchars($current_document['original_filename']); ?> 
-                                (<?php echo formatDocFileSize($current_document['file_size']); ?>)
-                            </p>
-                            
-                            <?php if ($can_download_for_user): ?>
-                            <a href="?id=<?php echo $document_id; ?>&revision=<?php echo $current_revision_id; ?>&serve_file=1" target="_blank"
-                               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mb-3">
-                                <i data-lucide="download" class="w-4 h-4 mr-2"></i>
-                                Download Document
-                            </a>
-                            <?php else: ?>
-                            <div class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed mb-3">
-                                <i data-lucide="lock" class="w-4 h-4 mr-2"></i>
-                                Download Restricted
-                            </div>
-                            <?php endif; ?>
-                            
-                            <div class="text-sm text-gray-500">
-                                <p>File type: <?php echo strtoupper($file_extension); ?></p>
-                                <p>Access: <?php echo ucwords(str_replace('_', ' ', $current_document['access_type'])); ?></p>
-                            </div>
-                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2"><?php echo htmlspecialchars($current_document['title']); ?></h3>
+                        <p class="text-gray-600 mb-4">
+                            <?php echo htmlspecialchars($current_document['original_filename']); ?> 
+                            (<?php echo formatDocFileSize($current_document['file_size']); ?>)
+                        </p>
+                        <p class="text-sm text-gray-500 mb-6">
+                            This file type cannot be previewed online. Please download to view.
+                        </p>
+                        <?php if ($can_download_for_user): ?>
+                        <a href="?id=<?php echo $document_id; ?>&revision=<?php echo $current_revision_id; ?>&serve_file=1" 
+                           class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                            Download File
+                        </a>
                         <?php endif; ?>
                     </div>
+                    <?php endif; ?>
                 </div>
-
-                <!-- Addendums Section -->
-                <?php if (!empty($addendums) || $is_admin): ?>
-                <div class="bg-white rounded-lg shadow">
-                    <div class="p-4 border-b border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <h2 class="text-lg font-semibold text-gray-900">
-                                Addendums 
-                                <span class="text-sm font-normal text-gray-500">(<?php echo count($addendums); ?>)</span>
-                            </h2>
+            </div>
+            
+            <!-- Description and Addendums -->
+            <?php if (!empty($document['description']) || !empty($addendums)): ?>
+            <div class="bg-white border-t border-gray-200">
+                <div class="px-6 py-4">
+                    
+                    <!-- Description -->
+                    <?php if (!empty($document['description'])): ?>
+                    <div class="mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Description</h3>
+                        <div class="text-gray-700 whitespace-pre-wrap"><?php echo htmlspecialchars($document['description']); ?></div>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <!-- Addendums -->
+                    <div class="border-t border-gray-200 pt-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-medium text-gray-900">
+                                Addendums (<?php echo count($addendums); ?>)
+                            </h3>
                             <?php if ($is_admin): ?>
-                            <button onclick="addAddendum()" 
-                                    class="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                            <button onclick="addAddendum()" class="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
                                 <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
                                 Add Addendum
                             </button>
                             <?php endif; ?>
                         </div>
-                    </div>
-                    
-                    <div class="p-4">
+                        
                         <?php if (empty($addendums)): ?>
-                        <div class="text-center py-8 text-gray-500">
-                            <i data-lucide="file-plus" class="w-12 h-12 text-gray-300 mx-auto mb-3"></i>
-                            <p>No addendums available for this document.</p>
+                        <div class="text-center py-8">
+                            <i data-lucide="file-plus" class="w-12 h-12 text-gray-300 mx-auto mb-4"></i>
+                            <p class="text-gray-600">No addendums available for this document.</p>
                         </div>
                         <?php else: ?>
                         <div class="space-y-4">
                             <?php foreach ($addendums as $addendum): ?>
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                <div class="flex items-center">
-                                    <div class="p-2 bg-white rounded-lg mr-3">
-                                        <i data-lucide="<?php echo getDocFileIcon($addendum['original_filename']); ?>" class="w-5 h-5 text-gray-600"></i>
+                            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1">
+                                        <h4 class="font-medium text-gray-900"><?php echo htmlspecialchars($addendum['title']); ?></h4>
+                                        <div class="text-sm text-gray-500 mt-1">
+                                            Added <?php echo date('M j, Y', strtotime($addendum['upload_date'])); ?>
+                                            by <?php echo htmlspecialchars($addendum['firstName'] . ' ' . $addendum['lastName']); ?>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 class="font-medium text-gray-900"><?php echo htmlspecialchars($addendum['title']); ?></h3>
-                                        <p class="text-sm text-gray-600">
-                                            <?php echo date('M j, Y', strtotime($addendum['upload_date'])); ?> • 
-                                            <?php echo formatDocFileSize($addendum['file_size']); ?>
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center space-x-2">
                                     <a href="view.php?id=<?php echo $addendum['id']; ?>" 
-                                       class="px-3 py-1 text-sm text-blue-600 hover:text-blue-800">
+                                       class="inline-flex items-center px-3 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 text-sm">
+                                        <i data-lucide="eye" class="w-4 h-4 mr-2"></i>
                                         View
                                     </a>
-                                    <?php if ($addendum['access_type'] === 'downloadable' && ($user_has_admin_access || $addendum['access_type'] === 'downloadable')): ?>
-                                        <?php if ($user_has_admin_access || $addendum['access_type'] === 'downloadable'): ?>
-                                        <a href="view.php?id=<?php echo $addendum['id']; ?>&serve_file=1" 
-                                           class="px-3 py-1 text-sm text-green-600 hover:text-green-800">
-                                            Download
-                                        </a>
-                                        <?php else: ?>
-                                        <span class="px-3 py-1 text-sm text-gray-400 cursor-not-allowed">
-                                            Restricted
-                                        </span>
-                                        <?php endif; ?>
-                                    <?php endif; ?>
                                 </div>
                             </div>
                             <?php endforeach; ?>
@@ -770,9 +605,8 @@ $document_tags = !empty($document['tags']) ? explode(',', $document['tags']) : [
                         <?php endif; ?>
                     </div>
                 </div>
-                <?php endif; ?>
-
             </div>
+            <?php endif; ?>
         </main>
     </div>
 
@@ -780,705 +614,9 @@ $document_tags = !empty($document['tags']) ? explode(',', $document['tags']) : [
         // Initialize Lucide icons
         lucide.createIcons();
         
-        // Production PDF.js Viewer Class
-        class ProductionPDFViewer {
-            constructor() {
-                this.pdfDoc = null;
-                this.pageNum = 1;
-                this.scale = 0.96; // Set default to 96% (0.96)
-                this.searchMatches = [];
-                this.currentMatch = -1;
-                this.isLoading = false;
-                this.retryCount = 0;
-                this.maxRetries = 3;
-                
-                // Configuration from PHP
-                this.config = {
-                    canDownload: <?php echo $can_download_for_user ? 'true' : 'false'; ?>,
-                    canPrint: <?php echo $can_print_for_user ? 'true' : 'false'; ?>,
-                    isAdmin: <?php echo $user_has_admin_access ? 'true' : 'false'; ?>,
-                    pdfUrl: '?id=<?php echo $document_id; ?>&revision=<?php echo $current_revision_id; ?>&serve_file=1',
-                    documentTitle: <?php echo json_encode(htmlspecialchars($current_document['title'])); ?>
-                };
-                
-                this.init();
-            }
-            
-            init() {
-                // Wait for PDF.js to load
-                this.waitForPDFJS().then(() => {
-                    this.setupUI();
-                    this.loadPDF();
-                }).catch((error) => {
-                    console.error('PDF.js failed to load:', error);
-                    this.showError('PDF viewer failed to load. Please refresh the page or contact support.');
-                });
-            }
-            
-            waitForPDFJS() {
-                return new Promise((resolve, reject) => {
-                    if (typeof pdfjsLib !== 'undefined') {
-                        // Set worker path for CDN
-                        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                        resolve();
-                        return;
-                    }
-                    
-                    let attempts = 0;
-                    const checkPDFJS = () => {
-                        attempts++;
-                        if (typeof pdfjsLib !== 'undefined') {
-                            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                            resolve();
-                        } else if (attempts < 50) { // Wait up to 5 seconds
-                            setTimeout(checkPDFJS, 100);
-                        } else {
-                            reject(new Error('PDF.js library failed to load'));
-                        }
-                    };
-                    checkPDFJS();
-                });
-            }
-            
-            setupUI() {
-                const container = document.getElementById('pdf-viewer-container');
-                container.innerHTML = `
-                    <div class="pdf-viewer-container border border-gray-200 rounded-lg overflow-hidden">
-                        <!-- PDF Controls -->
-                        <div class="bg-gray-50 border-b border-gray-200 p-3 flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
-                                <button id="prevPage" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed">
-                                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                                </button>
-                                <span class="text-sm text-gray-600 min-w-24 text-center">
-                                    Page <span id="pageNum">1</span> of <span id="pageCount">--</span>
-                                </span>
-                                <button id="nextPage" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed">
-                                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                            
-                            <div class="flex items-center space-x-3">
-                                <button id="zoomOut" class="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300">
-                                    <i data-lucide="zoom-out" class="w-4 h-4"></i>
-                                </button>
-                                <span id="zoomLevel" class="text-sm text-gray-600 min-w-12 text-center">115%</span>
-                                <button id="zoomIn" class="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300">
-                                    <i data-lucide="zoom-in" class="w-4 h-4"></i>
-                                </button>
-                                
-                                ${this.config.canDownload ? `
-                                    <a href="${this.config.pdfUrl}" target="_blank"
-                                       class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 inline-flex items-center">
-                                        <i data-lucide="download" class="w-4 h-4 mr-2"></i>
-                                        <span class="hidden sm:inline">Download</span>
-                                    </a>
-                                ` : `
-                                    <div class="px-3 py-2 bg-gray-100 text-gray-500 rounded cursor-not-allowed inline-flex items-center" title="Download restricted">
-                                        <i data-lucide="lock" class="w-4 h-4 mr-2"></i>
-                                        <span class="hidden sm:inline">Restricted</span>
-                                    </div>
-                                `}
-                            </div>
-                        </div>
-                        
-                        <!-- Search Bar -->
-                        <div class="bg-gray-50 border-b border-gray-200 p-3">
-                            <div class="flex items-center space-x-3">
-                                <div class="flex-1 relative">
-                                    <input type="text" id="searchInput" placeholder="Search in document..." 
-                                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    <i data-lucide="search" class="absolute left-3 top-3 w-4 h-4 text-gray-400"></i>
-                                </div>
-                                <button id="searchPrev" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300" disabled>
-                                    <i data-lucide="chevron-up" class="w-4 h-4"></i>
-                                </button>
-                                <button id="searchNext" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300" disabled>
-                                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                                </button>
-                                <span id="searchCount" class="text-sm text-gray-600 min-w-16 text-center">0 of 0</span>
-                            </div>
-                        </div>
-                        
-                        <!-- PDF Canvas -->
-                        <div class="bg-white overflow-auto relative" style="height: 600px;" id="pdfContainer">
-                            <canvas id="pdfCanvas" class="mx-auto block" style="display: block; max-width: 100%; height: auto; border: 1px solid #e5e7eb;"></canvas>
-                            <div id="pdfOverlay" class="absolute top-0 left-0 pointer-events-none" style="width: 100%; height: 100%;"></div>
-                        </div>
-                        
-                        <!-- Status Bar -->
-                        <div class="bg-gray-50 border-t border-gray-200 p-2 text-center">
-                            <span id="pdfStatus" class="text-sm text-gray-600">Ready</span>
-                        </div>
-                    </div>
-                `;
-                
-                // Initialize icons
-                if (typeof lucide !== 'undefined') {
-                    lucide.createIcons();
-                }
-                
-                this.setupEventListeners();
-            }
-            
-            setupEventListeners() {
-                // Navigation
-                document.getElementById('prevPage').addEventListener('click', () => this.prevPage());
-                document.getElementById('nextPage').addEventListener('click', () => this.nextPage());
-                
-                // Zoom
-                document.getElementById('zoomIn').addEventListener('click', () => this.zoomIn());
-                document.getElementById('zoomOut').addEventListener('click', () => this.zoomOut());
-                
-                // Search
-                const searchInput = document.getElementById('searchInput');
-                searchInput.addEventListener('input', () => this.performSearch());
-                searchInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter' && this.searchMatches.length > 0) {
-                        this.nextSearchMatch();
-                    }
-                });
-                
-                document.getElementById('searchNext').addEventListener('click', () => this.nextSearchMatch());
-                document.getElementById('searchPrev').addEventListener('click', () => this.prevSearchMatch());
-                
-                // Disable right-click for non-admin users (optional security measure)
-                if (!this.config.isAdmin) {
-                    document.getElementById('pdfContainer').addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
-                        return false;
-                    });
-                }
-            }
-            
-            async loadPDF() {
-                if (this.isLoading) return;
-                
-                this.isLoading = true;
-                this.updateStatus('Loading PDF...');
-                
-                try {
-                    const loadingTask = pdfjsLib.getDocument({
-                        url: this.config.pdfUrl,
-                        httpHeaders: {
-                            'Cache-Control': 'no-cache'
-                        }
-                    });
-                    
-                    // Monitor loading progress
-                    loadingTask.onProgress = (progress) => {
-                        if (progress.total) {
-                            const percent = Math.round((progress.loaded / progress.total) * 100);
-                            this.updateStatus(`Loading PDF... ${percent}%`);
-                        }
-                    };
-                    
-                    this.pdfDoc = await loadingTask.promise;
-                    
-                    document.getElementById('pageCount').textContent = this.pdfDoc.numPages;
-                    
-                    // Use a safe default scale that definitely works
-                    this.scale = 1.15; // Start with a known working scale
-                    console.log('Starting with safe scale:', this.scale);
-                    
-                    await this.renderPage(this.pageNum);
-                    
-                    // Force canvas to be visible and properly sized
-                    const canvas = document.getElementById('pdfCanvas');
-                    canvas.style.display = 'block';
-                    canvas.style.maxWidth = '100%';
-                    canvas.style.height = 'auto';
-                    canvas.style.visibility = 'visible';
-                    
-                    this.updateStatus(`Loaded successfully (${this.pdfDoc.numPages} pages)`);
-                    this.retryCount = 0; // Reset retry count on success
-                    
-                } catch (error) {
-                    console.error('Error loading PDF:', error);
-                    this.handleLoadError(error);
-                } finally {
-                    this.isLoading = false;
-                }
-            }
-            
-            handleLoadError(error) {
-                this.retryCount++;
-                
-                if (this.retryCount <= this.maxRetries) {
-                    this.updateStatus(`Load failed, retrying... (${this.retryCount}/${this.maxRetries})`);
-                    setTimeout(() => this.loadPDF(), 2000 * this.retryCount); // Exponential backoff
-                } else {
-                    this.showError('Failed to load PDF after multiple attempts. Please refresh the page or contact support.');
-                }
-            }
-            
-            async renderPage(num) {
-                if (!this.pdfDoc || this.isLoading) return;
-                
-                try {
-                    const page = await this.pdfDoc.getPage(num);
-                    const viewport = page.getViewport({scale: this.scale});
-                    
-                    const canvas = document.getElementById('pdfCanvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    // Set canvas dimensions before rendering
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-                    
-                    // Clear any previous content
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    
-                    const renderContext = {
-                        canvasContext: ctx,
-                        viewport: viewport
-                    };
-                    
-                    // Render the page
-                    await page.render(renderContext).promise;
-                    
-                    // Update UI
-                    document.getElementById('pageNum').textContent = num;
-                    document.getElementById('zoomLevel').textContent = Math.round(this.scale * 100) + '%';
-                    document.getElementById('prevPage').disabled = (num <= 1);
-                    document.getElementById('nextPage').disabled = (num >= this.pdfDoc.numPages);
-                    
-                    this.pageNum = num;
-                    
-                    // Clear any existing highlights and re-render search highlights if needed
-                    this.clearHighlights();
-                    if (this.searchMatches.length > 0 && this.currentMatch >= 0) {
-                        await this.highlightSearchMatches(page, viewport);
-                    }
-                    
-                } catch (error) {
-                    console.error('Error rendering page:', error);
-                    this.updateStatus('Error rendering page');
-                }
-            }
-            
-            prevPage() {
-                if (this.pageNum <= 1) return;
-                this.renderPage(this.pageNum - 1);
-            }
-            
-            nextPage() {
-                if (this.pageNum >= this.pdfDoc.numPages) return;
-                this.renderPage(this.pageNum + 1);
-            }
-            
-            zoomIn() {
-                this.scale *= 1.25;
-                // Ensure scale is never exactly 1.0
-                if (this.scale === 1.0) {
-                    this.scale = 1.01;
-                }
-                this.renderPage(this.pageNum);
-            }
-            
-            zoomOut() {
-                this.scale *= 0.8;
-                // Ensure scale is never exactly 1.0
-                if (this.scale === 1.0) {
-                    this.scale = 1.01;
-                }
-                this.renderPage(this.pageNum);
-            }
-            
-            async performSearch() {
-                const query = document.getElementById('searchInput').value.trim();
-                if (!query || !this.pdfDoc) {
-                    this.clearSearch();
-                    return;
-                }
-                
-                this.searchMatches = [];
-                this.currentMatch = -1;
-                this.updateStatus('Searching...');
-                
-                try {
-                    // Search through all pages and store text items with positions
-                    for (let i = 1; i <= this.pdfDoc.numPages; i++) {
-                        const page = await this.pdfDoc.getPage(i);
-                        const textContent = await page.getTextContent();
-                        const text = textContent.items.map(item => item.str).join(' ');
-                        
-                        // Also store individual text items for highlighting
-                        const regex = new RegExp(query, 'gi');
-                        let match;
-                        let textIndex = 0;
-                        
-                        for (const item of textContent.items) {
-                            const itemText = item.str;
-                            const itemRegex = new RegExp(query, 'gi');
-                            let itemMatch;
-                            
-                            while ((itemMatch = itemRegex.exec(itemText)) !== null) {
-                                this.searchMatches.push({
-                                    page: i,
-                                    textItem: item,
-                                    matchIndex: itemMatch.index,
-                                    matchText: itemMatch[0],
-                                    fullText: itemText,
-                                    globalIndex: textIndex + itemMatch.index
-                                });
-                            }
-                            textIndex += itemText.length + 1; // +1 for space
-                        }
-                    }
-                    
-                    this.updateSearchUI();
-                    
-                    if (this.searchMatches.length > 0) {
-                        this.currentMatch = 0;
-                        this.goToSearchMatch();
-                        this.updateStatus(`Found ${this.searchMatches.length} matches`);
-                    } else {
-                        this.updateStatus('No matches found');
-                    }
-                    
-                } catch (error) {
-                    console.error('Search error:', error);
-                    this.updateStatus('Search failed');
-                }
-            }
-            
-            updateSearchUI() {
-                const count = this.searchMatches.length;
-                const current = this.currentMatch >= 0 ? this.currentMatch + 1 : 0;
-                
-                document.getElementById('searchCount').textContent = `${current} of ${count}`;
-                document.getElementById('searchNext').disabled = count === 0;
-                document.getElementById('searchPrev').disabled = count === 0;
-            }
-            
-            nextSearchMatch() {
-                if (this.searchMatches.length === 0) return;
-                this.currentMatch = (this.currentMatch + 1) % this.searchMatches.length;
-                this.goToSearchMatch();
-            }
-            
-            prevSearchMatch() {
-                if (this.searchMatches.length === 0) return;
-                this.currentMatch = this.currentMatch <= 0 ? this.searchMatches.length - 1 : this.currentMatch - 1;
-                this.goToSearchMatch();
-            }
-            
-            async goToSearchMatch() {
-                if (this.currentMatch < 0 || this.currentMatch >= this.searchMatches.length) return;
-                
-                const match = this.searchMatches[this.currentMatch];
-                if (match.page !== this.pageNum) {
-                    await this.renderPage(match.page);
-                } else {
-                    // Re-highlight on current page
-                    const page = await this.pdfDoc.getPage(this.pageNum);
-                    const viewport = page.getViewport({scale: this.scale});
-                    await this.highlightSearchMatches(page, viewport);
-                }
-                
-                this.updateSearchUI();
-            }
-            
-            async highlightSearchMatches(page, viewport) {
-                try {
-                    // Clear existing highlights
-                    this.clearHighlights();
-                    
-                    // Get current page matches
-                    const currentPageMatches = this.searchMatches.filter(match => match.page === this.pageNum);
-                    if (currentPageMatches.length === 0) return;
-                    
-                    const overlay = document.getElementById('pdfOverlay');
-                    const canvas = document.getElementById('pdfCanvas');
-                    const container = document.getElementById('pdfContainer');
-                    
-                    // Get canvas position relative to container
-                    const canvasRect = canvas.getBoundingClientRect();
-                    const containerRect = container.getBoundingClientRect();
-                    
-                    const canvasOffsetX = canvasRect.left - containerRect.left + container.scrollLeft;
-                    const canvasOffsetY = canvasRect.top - containerRect.top + container.scrollTop;
-                    
-                    for (let i = 0; i < currentPageMatches.length; i++) {
-                        const match = currentPageMatches[i];
-                        const textItem = match.textItem;
-                        
-                        // Get text position using PDF viewport transformation
-                        const transform = textItem.transform;
-                        
-                        // Calculate position - PDF coordinates to canvas coordinates
-                        const x = transform[4]; // x position from PDF
-                        const y = transform[5]; // y position from PDF
-                        
-                        // Transform PDF coordinates to canvas coordinates
-                        const canvasX = x * viewport.scale;
-                        const canvasY = viewport.height - (y * viewport.scale); // Flip Y coordinate
-                        
-                        // Estimate text dimensions
-                        const fontSize = Math.abs(transform[0]) * viewport.scale;
-                        const charWidth = fontSize * 0.5; // Approximate character width
-                        const textWidth = match.matchText.length * charWidth;
-                        const textHeight = fontSize;
-                        
-                        // Adjust for canvas position within container
-                        const finalX = canvasOffsetX + canvasX;
-                        const finalY = canvasOffsetY + canvasY - textHeight;
-                        
-                        // Create highlight element
-                        const highlight = document.createElement('div');
-                        highlight.className = 'search-highlight';
-                        
-                        // Determine if this is the current match
-                        const isCurrentMatch = (this.searchMatches.indexOf(match) === this.currentMatch);
-                        
-                        highlight.style.cssText = `
-                            position: absolute;
-                            left: ${finalX}px;
-                            top: ${finalY}px;
-                            width: ${textWidth}px;
-                            height: ${textHeight}px;
-                            background-color: ${isCurrentMatch ? 'rgba(255, 235, 59, 0.8)' : 'rgba(255, 193, 7, 0.6)'};
-                            border: ${isCurrentMatch ? '2px solid #f57f17' : '1px solid #ff8f00'};
-                            border-radius: 2px;
-                            pointer-events: none;
-                            z-index: 10;
-                            box-shadow: ${isCurrentMatch ? '0 0 4px rgba(245, 127, 23, 0.8)' : 'none'};
-                        `;
-                        
-                        overlay.appendChild(highlight);
-                    }
-                    
-                } catch (error) {
-                    console.error('Error highlighting matches:', error);
-                }
-            }
-            
-            clearHighlights() {
-                const overlay = document.getElementById('pdfOverlay');
-                if (overlay) {
-                    // Remove all highlight elements
-                    const highlights = overlay.querySelectorAll('.search-highlight');
-                    highlights.forEach(highlight => highlight.remove());
-                }
-            }
-            
-            clearSearch() {
-                this.searchMatches = [];
-                this.currentMatch = -1;
-                this.clearHighlights();
-                this.updateSearchUI();
-            }
-            
-            updateStatus(message) {
-                const statusEl = document.getElementById('pdfStatus');
-                if (statusEl) {
-                    statusEl.textContent = message;
-                }
-            }
-            
-            showError(message) {
-                const container = document.getElementById('pdf-viewer-container');
-                container.innerHTML = `
-                    <div class="p-8 text-center">
-                        <i data-lucide="alert-triangle" class="w-16 h-16 text-red-500 mx-auto mb-4"></i>
-                        <h3 class="text-lg font-medium text-red-900 mb-2">PDF Viewer Error</h3>
-                        <p class="text-red-700 mb-4">${message}</p>
-                        ${this.config.canDownload ? `
-                            <a href="${this.config.pdfUrl}" target="_blank"
-                               class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                                <i data-lucide="download" class="w-4 h-4 mr-2"></i>
-                                Download PDF Instead
-                            </a>
-                        ` : ''}
-                    </div>
-                `;
-                if (typeof lucide !== 'undefined') {
-                    lucide.createIcons();
-                }
-            }
-        }
-        
-        // Initialize PDF viewer for PDF documents
-        <?php if ($is_pdf): ?>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Hide loading state
-            const loading = document.getElementById('pdf-loading');
-            if (loading) {
-                loading.style.display = 'none';
-            }
-            
-            // Initialize PDF viewer
-            new ProductionPDFViewer();
-        });
-        <?php endif; ?>
-        
-        // Revision change handler
-        function changeRevision(revisionId) {
-            if (revisionId == <?php echo $document_id; ?>) {
-                window.location.href = 'view.php?id=<?php echo $document_id; ?>';
-            } else {
-                window.location.href = 'view.php?id=<?php echo $document_id; ?>&revision=' + revisionId;
-            }
-        }
-        
-        // Restricted PDF Viewer for View-Only Documents
-        function openRestrictedPDFViewer() {
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50';
-            modal.innerHTML = `
-                <div class="w-full h-full max-w-6xl mx-4 my-4 bg-white rounded-lg flex flex-col">
-                    <div class="flex items-center justify-between p-4 border-b border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-900">
-                            <?php echo htmlspecialchars($current_document['title']); ?> (View Only)
-                        </h3>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-sm text-red-600 bg-red-50 px-2 py-1 rounded">
-                                Download & Print Disabled
-                            </span>
-                            <button onclick="closeRestrictedViewer()" class="p-2 text-gray-400 hover:text-gray-600">
-                                <i data-lucide="x" class="w-5 h-5"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="flex-1 bg-gray-100">
-                        <iframe src="?id=<?php echo $document_id; ?>&revision=<?php echo $current_revision_id; ?>&serve_file=1#toolbar=0&navpanes=0&scrollbar=1&view=FitH&zoom=100" 
-                                class="w-full h-full border-0"
-                                oncontextmenu="return false;"
-                                title="Restricted PDF Viewer">
-                        </iframe>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            lucide.createIcons();
-            
-            // Disable right-click on the modal
-            modal.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                return false;
-            });
-        }
-        
-        function closeRestrictedViewer() {
-            const modal = document.querySelector('.fixed.inset-0');
-            if (modal) {
-                modal.remove();
-            }
-        }
-        
-        // Add revision modal
-        function addRevision() {
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-            modal.innerHTML = `
-                <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Revision</h3>
-                    <form id="revisionForm" enctype="multipart/form-data">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Revision Name <span class="text-red-500">*</span>
-                                </label>
-                                <input type="text" name="revision_name" required 
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                       placeholder="e.g., Version 2.1, Updated 2025">
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Description
-                                </label>
-                                <textarea name="description" rows="3"
-                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                          placeholder="Brief description of changes..."></textarea>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Date Modified
-                                </label>
-                                <input type="date" name="date_modified" value="${new Date().toISOString().split('T')[0]}"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Revision File <span class="text-red-500">*</span>
-                                </label>
-                                <input type="file" name="revision_file" required 
-                                       accept="<?php echo implode(',', array_map(function($ext) { return '.' . $ext; }, DOC_ALLOWED_EXTENSIONS)); ?>"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <p class="text-xs text-gray-500 mt-1">Max size: <?php echo formatDocFileSize(DOC_MAX_FILE_SIZE); ?></p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-end space-x-3 mt-6">
-                            <button type="button" onclick="closeRevisionModal()" 
-                                    class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
-                                Cancel
-                            </button>
-                            <button type="submit" 
-                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                                Add Revision
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            // Handle form submission
-            document.getElementById('revisionForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const formData = new FormData(this);
-                formData.append('action', 'add_revision');
-                
-                try {
-                    const button = this.querySelector('button[type="submit"]');
-                    button.disabled = true;
-                    button.innerHTML = 'Adding...';
-                    
-                    const response = await fetch('', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        if (result.redirect) {
-                            window.location.href = result.redirect;
-                        } else {
-                            location.reload();
-                        }
-                    } else {
-                        alert(result.message || 'Failed to add revision');
-                        button.disabled = false;
-                        button.innerHTML = 'Add Revision';
-                    }
-                } catch (error) {
-                    console.error('Error adding revision:', error);
-                    alert('Failed to add revision');
-                }
-            });
-        }
-        
-        function closeRevisionModal() {
-            const modal = document.querySelector('.fixed.inset-0');
-            if (modal) {
-                modal.remove();
-            }
-        }
-        
-        // Close modal on backdrop click
-        document.addEventListener('click', function(e) {
-            if (e.target.matches('.fixed.inset-0')) {
-                closeRevisionModal();
-            }
+        // Mobile sidebar toggle
+        document.getElementById('menu-button')?.addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
         });
         
         // Toggle favorite
@@ -1494,19 +632,7 @@ $document_tags = !empty($document['tags']) ? explode(',', $document['tags']) : [
                 
                 const result = await response.json();
                 if (result.success) {
-                    const btn = document.getElementById('favoriteBtn');
-                    const icon = btn.querySelector('i');
-                    const text = btn.querySelector('span');
-                    
-                    if (result.action === 'added') {
-                        btn.className = 'flex items-center px-3 py-2 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 transition-colors';
-                        icon.classList.add('fill-current');
-                        if (text) text.textContent = 'Favorited';
-                    } else {
-                        btn.className = 'flex items-center px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-yellow-200 transition-colors';
-                        icon.classList.remove('fill-current');
-                        if (text) text.textContent = 'Add to Favorites';
-                    }
+                    location.reload(); // Reload to update favorite status
                 }
             } catch (error) {
                 console.error('Error toggling favorite:', error);
@@ -1585,8 +711,8 @@ $document_tags = !empty($document['tags']) ? explode(',', $document['tags']) : [
                     });
                     
                     const result = await response.json();
-                    if (result.success) {
-                        location.reload(); // Reload to update UI
+                    if (result.success && result.redirect) {
+                        window.location.href = result.redirect;
                     } else {
                         alert(result.message || 'Failed to unarchive document');
                     }
@@ -1597,20 +723,389 @@ $document_tags = !empty($document['tags']) ? explode(',', $document['tags']) : [
             }
         }
         
-        // Placeholder functions for future features
+        // Delete document permanently (Super Admin only)
+        async function deleteDocument() {
+            if (confirm('Are you sure you want to PERMANENTLY delete this document? This action cannot be undone and will remove the document and its file from the system.')) {
+                try {
+                    const response = await fetch('', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'action=delete'
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success && result.redirect) {
+                        window.location.href = result.redirect;
+                    } else {
+                        alert(result.message || 'Failed to delete document');
+                    }
+                } catch (error) {
+                    console.error('Error deleting document:', error);
+                    alert('Failed to delete document');
+                }
+            }
+        }
+        
+        // Navigation functions
         function editDocument() {
-            alert('Edit functionality will be implemented in the next phase.');
+            window.location.href = 'edit.php?id=<?php echo $document_id; ?>';
+        }
+        
+        function addRevision() {
+            window.location.href = 'add_revision.php?id=<?php echo $document_id; ?>';
         }
         
         function addAddendum() {
-            alert('Add addendum functionality will be implemented in the next phase.');
+            window.location.href = 'add_addendum.php?id=<?php echo $document_id; ?>';
         }
         
-        // Mobile sidebar toggle
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('open');
+        // Revision change handler
+        function changeRevision(revisionId) {
+            if (revisionId == <?php echo $document_id; ?>) {
+                window.location.href = 'view.php?id=<?php echo $document_id; ?>';
+            } else {
+                window.location.href = 'view.php?id=<?php echo $document_id; ?>&revision=' + revisionId;
+            }
         }
+
+        // Robust Custom PDF Viewer Class
+        class CustomPDFViewer {
+            constructor() {
+                this.pdf = null;
+                this.currentPage = 1;
+                this.totalPages = 1;
+                this.scale = 1.0;
+                this.container = document.getElementById('pdf-container');
+                this.canvas = null;
+                this.isProtected = <?php echo !$can_download_for_user ? 'true' : 'false'; ?>;
+                this.isFullscreen = false;
+                this.init();
+            }
+            
+            async init() {
+                try {
+                    // Multiple PDF.js CDN attempts for reliability
+                    await this.loadPDFJS();
+                    
+                    // Set PDF.js worker
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    
+                    // Load PDF with retry mechanism
+                    await this.loadPDF();
+                    
+                    this.setupControls();
+                    this.renderPage(1);
+                    
+                } catch (error) {
+                    console.error('Error loading PDF:', error);
+                    this.showError(error.message);
+                }
+            }
+            
+            async loadPDFJS() {
+                // Check if PDF.js is already loaded
+                if (typeof pdfjsLib !== 'undefined') {
+                    return Promise.resolve();
+                }
+                
+                // Try to load PDF.js from CDN
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+                    script.onload = () => resolve();
+                    script.onerror = () => {
+                        // Try backup CDN
+                        const backupScript = document.createElement('script');
+                        backupScript.src = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js';
+                        backupScript.onload = () => resolve();
+                        backupScript.onerror = () => reject(new Error('Failed to load PDF.js library'));
+                        document.head.appendChild(backupScript);
+                    };
+                    document.head.appendChild(script);
+                });
+            }
+            
+            async loadPDF() {
+                const maxRetries = 3;
+                let lastError;
+                
+                for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                    try {
+                        console.log(`PDF load attempt ${attempt}/${maxRetries}`);
+                        
+                        const response = await fetch('?id=<?php echo $document_id; ?>&revision=<?php echo $current_revision_id; ?>&serve_file=1');
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        const arrayBuffer = await response.arrayBuffer();
+                        
+                        if (arrayBuffer.byteLength === 0) {
+                            throw new Error('Empty PDF file received');
+                        }
+                        
+                        this.pdf = await pdfjsLib.getDocument({
+                            data: arrayBuffer,
+                            verbosity: 0 // Reduce console spam
+                        }).promise;
+                        
+                        this.totalPages = this.pdf.numPages;
+                        console.log(`PDF loaded successfully: ${this.totalPages} pages`);
+                        return;
+                        
+                    } catch (error) {
+                        lastError = error;
+                        console.error(`PDF load attempt ${attempt} failed:`, error);
+                        
+                        if (attempt < maxRetries) {
+                            // Wait before retry
+                            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                        }
+                    }
+                }
+                
+                throw lastError || new Error('Failed to load PDF after multiple attempts');
+            }
+            
+            setupControls() {
+                const prevBtn = document.getElementById('prev-page');
+                const nextBtn = document.getElementById('next-page');
+                const zoomInBtn = document.getElementById('zoom-in');
+                const zoomOutBtn = document.getElementById('zoom-out');
+                const fitWidthBtn = document.getElementById('fit-width');
+                const fullscreenBtn = document.getElementById('toggle-fullscreen');
+                
+                prevBtn.addEventListener('click', () => this.previousPage());
+                nextBtn.addEventListener('click', () => this.nextPage());
+                zoomInBtn.addEventListener('click', () => this.zoomIn());
+                zoomOutBtn.addEventListener('click', () => this.zoomOut());
+                fitWidthBtn.addEventListener('click', () => this.fitToWidth());
+                fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
+                
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.target.tagName.toLowerCase() === 'input') return;
+                    
+                    switch(e.key) {
+                        case 'ArrowLeft':
+                        case 'PageUp':
+                            e.preventDefault();
+                            this.previousPage();
+                            break;
+                        case 'ArrowRight':
+                        case 'PageDown':
+                        case ' ': // Spacebar
+                            e.preventDefault();
+                            this.nextPage();
+                            break;
+                        case '+':
+                        case '=':
+                            e.preventDefault();
+                            this.zoomIn();
+                            break;
+                        case '-':
+                            e.preventDefault();
+                            this.zoomOut();
+                            break;
+                        case 'f':
+                        case 'F':
+                            if (e.ctrlKey || e.metaKey) return; // Don't interfere with browser search
+                            e.preventDefault();
+                            this.toggleFullscreen();
+                            break;
+                        case 'Escape':
+                            if (this.isFullscreen) {
+                                e.preventDefault();
+                                this.toggleFullscreen();
+                            }
+                            break;
+                    }
+                });
+                
+                // Mouse wheel zoom (with Ctrl key)
+                this.container.addEventListener('wheel', (e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                        e.preventDefault();
+                        if (e.deltaY < 0) {
+                            this.zoomIn();
+                        } else {
+                            this.zoomOut();
+                        }
+                    }
+                });
+                
+                this.updateControls();
+            }
+            
+            async renderPage(pageNum) {
+                try {
+                    const page = await this.pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: this.scale });
+                    
+                    // Create or reuse canvas
+                    if (!this.canvas) {
+                        this.canvas = document.createElement('canvas');
+                        this.canvas.className = 'pdf-canvas mx-auto shadow-lg border border-gray-200 rounded';
+                        
+                        // Apply protection if needed
+                        if (this.isProtected) {
+                            this.canvas.oncontextmenu = () => false;
+                            this.canvas.onselectstart = () => false;
+                            this.canvas.ondragstart = () => false;
+                            this.canvas.style.userSelect = 'none';
+                            this.canvas.style.webkitUserSelect = 'none';
+                            this.canvas.style.mozUserSelect = 'none';
+                            this.canvas.style.msUserSelect = 'none';
+                        }
+                    }
+                    
+                    const context = this.canvas.getContext('2d');
+                    
+                    // Set canvas size
+                    this.canvas.height = viewport.height;
+                    this.canvas.width = viewport.width;
+                    
+                    // Clear canvas
+                    context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    
+                    // Render PDF page into canvas
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    
+                    await page.render(renderContext).promise;
+                    
+                    // Update container
+                    this.container.innerHTML = '';
+                    this.container.appendChild(this.canvas);
+                    
+                    this.currentPage = pageNum;
+                    this.updateControls();
+                    
+                } catch (error) {
+                    console.error('Error rendering page:', error);
+                    this.showError('Failed to render PDF page: ' + error.message);
+                }
+            }
+            
+            updateControls() {
+                document.getElementById('page-info').textContent = `Page ${this.currentPage} of ${this.totalPages}`;
+                document.getElementById('prev-page').disabled = this.currentPage <= 1;
+                document.getElementById('next-page').disabled = this.currentPage >= this.totalPages;
+                document.getElementById('zoom-level').textContent = Math.round(this.scale * 100) + '%';
+                
+                // Update fullscreen icon
+                const fullscreenIcon = document.querySelector('#toggle-fullscreen i');
+                if (fullscreenIcon) {
+                    fullscreenIcon.setAttribute('data-lucide', this.isFullscreen ? 'minimize' : 'expand');
+                    lucide.createIcons();
+                }
+            }
+            
+            previousPage() {
+                if (this.currentPage > 1) {
+                    this.renderPage(this.currentPage - 1);
+                }
+            }
+            
+            nextPage() {
+                if (this.currentPage < this.totalPages) {
+                    this.renderPage(this.currentPage + 1);
+                }
+            }
+            
+            zoomIn() {
+                if (this.scale < 3.0) {
+                    this.scale += 0.25;
+                    this.renderPage(this.currentPage);
+                }
+            }
+            
+            zoomOut() {
+                if (this.scale > 0.5) {
+                    this.scale -= 0.25;
+                    this.renderPage(this.currentPage);
+                }
+            }
+            
+            fitToWidth() {
+                const containerWidth = this.container.clientWidth - 32; // Account for padding
+                if (this.canvas && this.pdf) {
+                    this.pdf.getPage(this.currentPage).then(page => {
+                        const viewport = page.getViewport({ scale: 1.0 });
+                        this.scale = containerWidth / viewport.width;
+                        this.renderPage(this.currentPage);
+                    });
+                }
+            }
+            
+            toggleFullscreen() {
+                const viewer = document.querySelector('.document-viewer').parentElement;
+                
+                if (!this.isFullscreen) {
+                    // Enter fullscreen
+                    if (viewer.requestFullscreen) {
+                        viewer.requestFullscreen();
+                    } else if (viewer.webkitRequestFullscreen) {
+                        viewer.webkitRequestFullscreen();
+                    } else if (viewer.mozRequestFullScreen) {
+                        viewer.mozRequestFullScreen();
+                    } else if (viewer.msRequestFullscreen) {
+                        viewer.msRequestFullscreen();
+                    }
+                    this.isFullscreen = true;
+                } else {
+                    // Exit fullscreen
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                    this.isFullscreen = false;
+                }
+                
+                this.updateControls();
+            }
+            
+            showError(message = 'Unknown error occurred') {
+                this.container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i data-lucide="alert-triangle" class="w-12 h-12 text-red-500 mx-auto mb-4"></i>
+                        <h3 class="text-lg font-medium text-red-900 mb-2">PDF Viewer Error</h3>
+                        <p class="text-red-700 mb-4">${message}</p>
+                        <div class="space-y-2">
+                            <button onclick="location.reload()" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mr-2">
+                                <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
+                                Retry
+                            </button>
+                            <?php if ($can_download_for_user): ?>
+                            <a href="?id=<?php echo $document_id; ?>&revision=<?php echo $current_revision_id; ?>&serve_file=1" target="_blank"
+                               class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                                Download PDF Instead
+                            </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        // Initialize the custom PDF viewer for PDF documents
+        <?php if ($is_pdf): ?>
+        document.addEventListener('DOMContentLoaded', function() {
+            new CustomPDFViewer();
+        });
+        <?php endif; ?>
     </script>
 </body>
 </html>

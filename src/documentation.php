@@ -1,84 +1,71 @@
 <?php
 // /src/documentation.php
-// Documentation module business logic functions for SafetyHub
-// Contains all database operations and business logic for documentation management
+// Documentation Module Core Functions
+// Contains all database operations and business logic for the documentation module
 
 /**
- * Get all documents with pagination and filtering
+ * Get documents with filtering, pagination, and search
  */
-function getDocuments($conn, $search = '', $tag = '', $favorites_only = false, $user_id = null, $page = 1, $per_page = 20, $include_archived = false) {
+function getDocuments($conn, $search = '', $tag = '', $favorites_only = false, $user_id = 0, $page = 1, $per_page = 12, $include_archived = false) {
     $offset = ($page - 1) * $per_page;
-    $where_conditions = [];
-    $params = [];
-    $types = '';
     
-    // Base query with role-based visibility
+    // Base query - allow admins to see archived documents if requested
+    $archived_condition = ($include_archived && hasDocAdminAccess()) ? "" : "AND d.archived_date IS NULL";
+    
     $sql = "SELECT d.*, u.firstName, u.lastName,
-                   CASE 
-                       WHEN df.user_id IS NOT NULL THEN 1 
-                       ELSE 0 
-                   END as is_favorite,
-                   COUNT(df2.id) as favorite_count
+                   CONCAT(u.firstName, ' ', u.lastName) as uploader_name,
+                   CASE WHEN df.id IS NOT NULL THEN 1 ELSE 0 END as is_favorited
             FROM documents d
             LEFT JOIN users u ON d.uploaded_by = u.id
-            LEFT JOIN document_favorites df ON d.id = df.document_id AND df.user_id = ?
-            LEFT JOIN document_favorites df2 ON d.id = df2.document_id
-            WHERE 1=1";
+            LEFT JOIN document_favorites df ON d.id = df.document_id AND df.user_id = ?";
     
-    $params[] = $user_id ?? $_SESSION['user_id'];
-    $types .= 'i';
+    $where_conditions = ["1=1"];
+    $params = [$user_id]; // Always include user_id for favorites check
+    $types = "i";
     
-    // Archive filter
-    if (!$include_archived) {
-        $where_conditions[] = "d.archived_date IS NULL";
-    }
-    
-    // Add role-based visibility filter
-    $user_role_id = $_SESSION['user_role_id'];
-    if ($user_role_id == 6) { // Subcontractor
-        $where_conditions[] = "d.visibility IN ('all')";
-    } elseif ($user_role_id == 5) { // Employee
-        $where_conditions[] = "d.visibility IN ('all', 'employees_only')";
-    } elseif ($user_role_id == 4) { // Supervisor
-        $where_conditions[] = "d.visibility IN ('all', 'employees_only', 'supervisors_plus')";
-    } else { // Managers and Admins (1,2,3)
-        // Can see all documents
+    // Apply archived condition
+    if (!empty($archived_condition)) {
+        $where_conditions[] = substr($archived_condition, 4); // Remove "AND "
     }
     
     // Search filter
     if (!empty($search)) {
-        $where_conditions[] = "(d.title LIKE ? OR d.description LIKE ? OR d.tags LIKE ?)";
-        $search_param = '%' . $search . '%';
-        $params[] = $search_param;
-        $params[] = $search_param;
-        $params[] = $search_param;
-        $types .= 'sss';
+        $where_conditions[] = "(d.title LIKE ? OR d.description LIKE ? OR d.tags LIKE ? OR d.original_filename LIKE ?)";
+        $search_param = "%{$search}%";
+        $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param]);
+        $types .= "ssss";
     }
     
     // Tag filter
     if (!empty($tag)) {
-        $where_conditions[] = "FIND_IN_SET(?, d.tags)";
+        $where_conditions[] = "FIND_IN_SET(?, REPLACE(d.tags, ' ', ''))";
         $params[] = $tag;
-        $types .= 's';
+        $types .= "s";
+    }
+    
+    // Category filter (if provided as tag)
+    if (!empty($tag) && array_key_exists($tag, DOC_CATEGORIES)) {
+        $where_conditions[] = "d.tags LIKE ?";
+        $params[] = "%{$tag}%";
+        $types .= "s";
     }
     
     // Favorites filter
     if ($favorites_only) {
-        $where_conditions[] = "df.user_id IS NOT NULL";
+        $where_conditions[] = "df.id IS NOT NULL";
     }
     
-    // Add WHERE conditions
     if (!empty($where_conditions)) {
-        $sql .= " AND " . implode(" AND ", $where_conditions);
+        $sql .= " WHERE " . implode(" AND ", $where_conditions);
     }
     
-    $sql .= " GROUP BY d.id
-              ORDER BY d.is_pinned DESC, d.date_modified DESC
-              LIMIT ? OFFSET ?";
+    // Order by: pinned first, then by upload date
+    $sql .= " ORDER BY d.is_pinned DESC, d.pin_order ASC, d.upload_date DESC";
+    $sql .= " LIMIT ? OFFSET ?";
     
     $params[] = $per_page;
     $params[] = $offset;
-    $types .= 'ii';
+    $types .= "ii";
     
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
@@ -98,59 +85,52 @@ function getDocuments($conn, $search = '', $tag = '', $favorites_only = false, $
 /**
  * Get total document count for pagination
  */
-function getDocumentCount($conn, $search = '', $tag = '', $favorites_only = false, $user_id = null, $include_archived = false) {
-    $where_conditions = [];
-    $params = [];
-    $types = '';
+function getDocumentCount($conn, $search = '', $tag = '', $favorites_only = false, $user_id = 0, $include_archived = false) {
+    // Base query - allow admins to see archived documents if requested
+    $archived_condition = ($include_archived && hasDocAdminAccess()) ? "" : "AND d.archived_date IS NULL";
     
     $sql = "SELECT COUNT(DISTINCT d.id) as total
             FROM documents d
-            LEFT JOIN document_favorites df ON d.id = df.document_id AND df.user_id = ?
-            WHERE 1=1";
+            LEFT JOIN document_favorites df ON d.id = df.document_id AND df.user_id = ?";
     
-    $params[] = $user_id ?? $_SESSION['user_id'];
-    $types .= 'i';
+    $where_conditions = ["1=1"];
+    $params = [$user_id]; // Always include user_id for consistency
+    $types = "i";
     
-    // Archive filter
-    if (!$include_archived) {
-        $where_conditions[] = "d.archived_date IS NULL";
-    }
-    
-    // Add role-based visibility filter
-    $user_role_id = $_SESSION['user_role_id'];
-    if ($user_role_id == 6) { // Subcontractor
-        $where_conditions[] = "d.visibility IN ('all')";
-    } elseif ($user_role_id == 5) { // Employee
-        $where_conditions[] = "d.visibility IN ('all', 'employees_only')";
-    } elseif ($user_role_id == 4) { // Supervisor
-        $where_conditions[] = "d.visibility IN ('all', 'employees_only', 'supervisors_plus')";
+    // Apply archived condition
+    if (!empty($archived_condition)) {
+        $where_conditions[] = substr($archived_condition, 4); // Remove "AND "
     }
     
     // Search filter
     if (!empty($search)) {
-        $where_conditions[] = "(d.title LIKE ? OR d.description LIKE ? OR d.tags LIKE ?)";
-        $search_param = '%' . $search . '%';
-        $params[] = $search_param;
-        $params[] = $search_param;
-        $params[] = $search_param;
-        $types .= 'sss';
+        $where_conditions[] = "(d.title LIKE ? OR d.description LIKE ? OR d.tags LIKE ? OR d.original_filename LIKE ?)";
+        $search_param = "%{$search}%";
+        $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param]);
+        $types .= "ssss";
     }
     
     // Tag filter
     if (!empty($tag)) {
-        $where_conditions[] = "FIND_IN_SET(?, d.tags)";
+        $where_conditions[] = "FIND_IN_SET(?, REPLACE(d.tags, ' ', ''))";
         $params[] = $tag;
-        $types .= 's';
+        $types .= "s";
+    }
+    
+    // Category filter (if provided as tag)
+    if (!empty($tag) && array_key_exists($tag, DOC_CATEGORIES)) {
+        $where_conditions[] = "d.tags LIKE ?";
+        $params[] = "%{$tag}%";
+        $types .= "s";
     }
     
     // Favorites filter
     if ($favorites_only) {
-        $where_conditions[] = "df.user_id IS NOT NULL";
+        $where_conditions[] = "df.id IS NOT NULL";
     }
     
-    // Add WHERE conditions
     if (!empty($where_conditions)) {
-        $sql .= " AND " . implode(" AND ", $where_conditions);
+        $sql .= " WHERE " . implode(" AND ", $where_conditions);
     }
     
     $stmt = $conn->prepare($sql);
@@ -467,149 +447,255 @@ function getDocumentRevisions($parent_id, $conn) {
 }
 
 /**
- * Add document revision
+ * Update document
  */
-function addDocumentRevision($parent_id, $revision_name, $description, $tags, $access_type, $visibility, $date_modified, $file_info, $uploaded_by, $conn) {
-    $file_path = '';
-    $file_size = 0;
-    $original_filename = '';
-    
-    if (isset($file_info) && $file_info['error'] == UPLOAD_ERR_OK) {
-        // Validate file type
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mime_type = finfo_file($finfo, $file_info['tmp_name']);
-        finfo_close($finfo);
-        
-        if (!in_array($mime_type, DOC_ALLOWED_FILE_TYPES)) {
-            error_log("Security Alert: Revision upload with incorrect MIME type attempted. Name: {$file_info['name']}, Type: {$mime_type}");
-            return false;
-        }
-        
-        if ($file_info['size'] > DOC_MAX_FILE_SIZE) {
-            error_log("Revision file too large: {$file_info['name']}, Size: {$file_info['size']}");
-            return false;
-        }
-        
-        // Generate unique filename
-        $extension = strtolower(pathinfo($file_info['name'], PATHINFO_EXTENSION));
-        $filename = time() . '_rev_' . uniqid() . '.' . $extension;
-        $target_file = DOCUMENTATION_UPLOAD_DIR . $filename;
-        
-        if (move_uploaded_file($file_info['tmp_name'], $target_file)) {
-            $file_path = $filename;
-            $file_size = $file_info['size'];
-            $original_filename = $file_info['name'];
-        } else {
-            error_log("Failed to move uploaded revision file: {$file_info['name']}");
-            return false;
-        }
-    } else {
-        error_log("Revision upload error: " . $file_info['error']);
-        return false;
-    }
-    
+function updateDocument($document_id, $title, $description, $tags, $access_type, $visibility, $date_modified, $conn) {
     // Convert tags array to comma-separated string
     if (is_array($tags)) {
         $tags = implode(',', $tags);
     }
     
     $stmt = $conn->prepare("
-        INSERT INTO documents (title, description, tags, access_type, visibility, 
-                              file_path, file_size, original_filename, 
-                              date_modified, upload_date, uploaded_by, parent_document_id, is_revision, is_pinned)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, 1, 0)
+        UPDATE documents 
+        SET title = ?, description = ?, tags = ?, access_type = ?, 
+            visibility = ?, date_modified = ?
+        WHERE id = ?
     ");
     
     if (!$stmt) {
-        error_log("Add Document Revision SQL Error: " . $conn->error);
+        error_log("Update Document SQL Error: " . $conn->error);
         return false;
     }
     
-    $stmt->bind_param("sssssiissii", 
-        $revision_name, $description, $tags, $access_type, $visibility,
-        $file_path, $file_size, $original_filename, $date_modified, $uploaded_by, $parent_id
-    );
-    
+    $stmt->bind_param("ssssssi", $title, $description, $tags, $access_type, $visibility, $date_modified, $document_id);
     $success = $stmt->execute();
-    if (!$success) {
-        error_log("Add Document Revision Execute Error: " . $stmt->error);
-    }
-    
-    $revision_id = $conn->insert_id;
     $stmt->close();
     
-    return $success ? $revision_id : false;
+    return $success;
 }
-function addDocumentAddendum($parent_id, $title, $description, $tags, $access_type, $visibility, $date_modified, $file_info, $uploaded_by, $conn) {
-    $file_path = '';
-    $file_size = 0;
-    $original_filename = '';
+
+/**
+ * Search documents with advanced filtering
+ */
+function searchDocuments($conn, $filters = [], $sort = 'upload_date', $order = 'DESC', $page = 1, $per_page = 12) {
+    $offset = ($page - 1) * $per_page;
     
-    if (isset($file_info) && $file_info['error'] == UPLOAD_ERR_OK) {
-        // Validate file type
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mime_type = finfo_file($finfo, $file_info['tmp_name']);
-        finfo_close($finfo);
-        
-        if (!in_array($mime_type, DOC_ALLOWED_FILE_TYPES)) {
-            error_log("Security Alert: Addendum upload with incorrect MIME type attempted. Name: {$file_info['name']}, Type: {$mime_type}");
-            return false;
-        }
-        
-        if ($file_info['size'] > DOC_MAX_FILE_SIZE) {
-            error_log("Addendum file too large: {$file_info['name']}, Size: {$file_info['size']}");
-            return false;
-        }
-        
-        // Generate unique filename
-        $extension = strtolower(pathinfo($file_info['name'], PATHINFO_EXTENSION));
-        $filename = time() . '_addendum_' . uniqid() . '.' . $extension;
-        $target_file = DOCUMENTATION_UPLOAD_DIR . $filename;
-        
-        if (move_uploaded_file($file_info['tmp_name'], $target_file)) {
-            $file_path = $filename;
-            $file_size = $file_info['size'];
-            $original_filename = $file_info['name'];
-        } else {
-            error_log("Failed to move uploaded addendum file: {$file_info['name']}");
-            return false;
-        }
-    } else {
-        error_log("Addendum upload error: " . $file_info['error']);
-        return false;
+    $sql = "SELECT d.*, u.firstName, u.lastName,
+                   CONCAT(u.firstName, ' ', u.lastName) as uploader_name
+            FROM documents d
+            LEFT JOIN users u ON d.uploaded_by = u.id
+            WHERE d.archived_date IS NULL";
+    
+    $params = [];
+    $types = "";
+    
+    // Apply filters
+    if (!empty($filters['search'])) {
+        $sql .= " AND (d.title LIKE ? OR d.description LIKE ? OR d.tags LIKE ? OR d.original_filename LIKE ?)";
+        $search_param = "%{$filters['search']}%";
+        $params = array_merge($params, [$search_param, $search_param, $search_param, $search_param]);
+        $types .= "ssss";
     }
     
-    // Convert tags array to comma-separated string
-    if (is_array($tags)) {
-        $tags = implode(',', $tags);
+    if (!empty($filters['category'])) {
+        $sql .= " AND d.tags LIKE ?";
+        $params[] = "%{$filters['category']}%";
+        $types .= "s";
     }
     
-    $stmt = $conn->prepare("
-        INSERT INTO documents (title, description, tags, access_type, visibility, 
-                              file_path, file_size, original_filename, 
-                              date_modified, upload_date, uploaded_by, parent_document_id, is_pinned)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, 0)
-    ");
+    if (!empty($filters['access_type'])) {
+        $sql .= " AND d.access_type = ?";
+        $params[] = $filters['access_type'];
+        $types .= "s";
+    }
     
+    if (!empty($filters['uploader'])) {
+        $sql .= " AND d.uploaded_by = ?";
+        $params[] = $filters['uploader'];
+        $types .= "i";
+    }
+    
+    if (!empty($filters['date_from'])) {
+        $sql .= " AND d.upload_date >= ?";
+        $params[] = $filters['date_from'] . ' 00:00:00';
+        $types .= "s";
+    }
+    
+    if (!empty($filters['date_to'])) {
+        $sql .= " AND d.upload_date <= ?";
+        $params[] = $filters['date_to'] . ' 23:59:59';
+        $types .= "s";
+    }
+    
+    if (!empty($filters['file_type'])) {
+        $sql .= " AND d.original_filename LIKE ?";
+        $params[] = "%.{$filters['file_type']}";
+        $types .= "s";
+    }
+    
+    // Apply sorting
+    $valid_sort_columns = ['title', 'upload_date', 'date_modified', 'file_size', 'uploader_name'];
+    $sort = in_array($sort, $valid_sort_columns) ? $sort : 'upload_date';
+    $order = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
+    
+    $sql .= " ORDER BY d.is_pinned DESC, d.{$sort} {$order}";
+    $sql .= " LIMIT ? OFFSET ?";
+    
+    $params[] = $per_page;
+    $params[] = $offset;
+    $types .= "ii";
+    
+    $stmt = $conn->prepare($sql);
     if (!$stmt) {
-        error_log("Add Document Addendum SQL Error: " . $conn->error);
-        return false;
+        error_log("Search Documents SQL Error: " . $conn->error);
+        return [];
     }
     
-    $stmt->bind_param("sssssiissii", 
-        $title, $description, $tags, $access_type, $visibility,
-        $file_path, $file_size, $original_filename, $date_modified, $uploaded_by, $parent_id
-    );
-    
-    $success = $stmt->execute();
-    if (!$success) {
-        error_log("Add Document Addendum Execute Error: " . $stmt->error);
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
     }
     
-    $addendum_id = $conn->insert_id;
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $documents = $result->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
     
-    return $success ? $addendum_id : false;
+    return $documents;
+}
+
+/**
+ * Get uploaders list for filter dropdown
+ */
+function getDocumentUploaders($conn) {
+    $sql = "SELECT DISTINCT u.id, CONCAT(u.firstName, ' ', u.lastName) as name
+            FROM users u
+            INNER JOIN documents d ON u.id = d.uploaded_by
+            WHERE d.archived_date IS NULL
+            ORDER BY name";
+    
+    $result = $conn->query($sql);
+    if (!$result) {
+        error_log("Get Document Uploaders SQL Error: " . $conn->error);
+        return [];
+    }
+    
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+/**
+ * Check if user can view a specific document based on visibility settings
+ */
+function canUserViewDocument($document, $user_role_id) {
+    if (!$document) {
+        return false;
+    }
+    
+    // Admins can view all documents
+    if (in_array($user_role_id, [1, 2, 3])) { // Super Admin, Admin, Manager
+        return true;
+    }
+    
+    // Check visibility settings
+    switch ($document['visibility']) {
+        case 'all':
+            return true;
+            
+        case 'employees_only':
+            return in_array($user_role_id, [4, 5, 6]); // Supervisor, Employee, Subcontractor
+            
+        case 'supervisors_plus':
+            return in_array($user_role_id, [1, 2, 3, 4]); // Super Admin, Admin, Manager, Supervisor
+            
+        case 'managers_only':
+            return in_array($user_role_id, [1, 2, 3]); // Super Admin, Admin, Manager
+            
+        case 'admins_only':
+            return in_array($user_role_id, [1, 2]); // Super Admin, Admin only
+            
+        default:
+            return false;
+    }
+}
+
+/**
+ * Delete document permanently (Super Admin only)
+ * This function completely removes a document and its file from the system
+ */
+function deleteDocument($document_id, $conn) {
+    // Get document info first to delete the physical file
+    $document = getDocumentById($document_id, $conn);
+    if (!$document) {
+        error_log("Delete Document Error: Document ID $document_id not found");
+        return false;
+    }
+    
+    // Start transaction for data consistency
+    $conn->autocommit(false);
+    
+    try {
+        // Delete related records first (due to foreign key constraints)
+        
+        // 1. Delete favorites
+        $stmt = $conn->prepare("DELETE FROM document_favorites WHERE document_id = ?");
+        if (!$stmt) {
+            throw new Exception("Failed to prepare favorites deletion: " . $conn->error);
+        }
+        $stmt->bind_param("i", $document_id);
+        $stmt->execute();
+        $stmt->close();
+        
+        // 2. Delete any addendums or revisions (documents that have this as parent)
+        $stmt = $conn->prepare("DELETE FROM documents WHERE parent_document_id = ?");
+        if (!$stmt) {
+            throw new Exception("Failed to prepare related documents deletion: " . $conn->error);
+        }
+        $stmt->bind_param("i", $document_id);
+        $stmt->execute();
+        $stmt->close();
+        
+        // 3. Delete the main document record
+        $stmt = $conn->prepare("DELETE FROM documents WHERE id = ?");
+        if (!$stmt) {
+            throw new Exception("Failed to prepare main document deletion: " . $conn->error);
+        }
+        $stmt->bind_param("i", $document_id);
+        $success = $stmt->execute();
+        $affected_rows = $stmt->affected_rows;
+        $stmt->close();
+        
+        if (!$success || $affected_rows === 0) {
+            throw new Exception("Failed to delete document record from database");
+        }
+        
+        // 4. Delete the physical file if it exists
+        if (!empty($document['file_path'])) {
+            $full_file_path = DOCUMENTATION_UPLOAD_DIR . $document['file_path'];
+            if (file_exists($full_file_path)) {
+                if (!unlink($full_file_path)) {
+                    // Log the error but don't fail the transaction
+                    error_log("Warning: Failed to delete physical file: " . $full_file_path);
+                }
+            }
+        }
+        
+        // Commit the transaction
+        $conn->commit();
+        
+        // Log successful deletion
+        error_log("Document deleted successfully: ID=$document_id, File=" . $document['original_filename']);
+        
+        return true;
+        
+    } catch (Exception $e) {
+        // Rollback the transaction on any error
+        $conn->rollback();
+        error_log("Delete Document Error: " . $e->getMessage());
+        return false;
+        
+    } finally {
+        // Always restore autocommit
+        $conn->autocommit(true);
+    }
 }
 
 ?>

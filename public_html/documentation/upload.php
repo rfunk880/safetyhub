@@ -182,11 +182,6 @@ $user_name = $_SESSION['user_first_name'] . ' ' . $_SESSION['user_last_name'];
                                     <p class="text-sm text-gray-600 mb-4">or click anywhere in this area to browse files</p>
                                     <input type="file" name="document" id="documentFile" accept="<?php echo implode(',', array_map(function($ext) { return '.' . $ext; }, DOC_ALLOWED_EXTENSIONS)); ?>" 
                                            class="hidden" required>
-                                    <button type="button" onclick="event.stopPropagation(); document.getElementById('documentFile').click()" 
-                                            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                        <i data-lucide="folder" class="w-4 h-4 mr-2"></i>
-                                        Choose File
-                                    </button>
                                 </div>
                                 <div id="filePreview" class="hidden">
                                     <div class="flex items-center justify-center">

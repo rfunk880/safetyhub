@@ -355,7 +355,7 @@ $error = $_GET['error'] ?? '';
                                         <button onclick="toggleFavorite(<?php echo $doc['id']; ?>)" 
                                                 class="p-1 rounded hover:bg-gray-100 transition-colors" 
                                                 id="fav-btn-<?php echo $doc['id']; ?>">
-                                            <i data-lucide="star" class="w-4 h-4 <?php echo $doc['is_favorite'] ? 'text-yellow-500 fill-current' : 'text-gray-400'; ?>"></i>
+                                            <i data-lucide="star" class="w-4 h-4 <?php echo (isset($doc['is_favorite']) && $doc['is_favorite']) ? 'text-yellow-500 fill-current' : 'text-gray-400'; ?>"></i>
                                         </button>
                                         
                                         <!-- Admin Pin Button -->
